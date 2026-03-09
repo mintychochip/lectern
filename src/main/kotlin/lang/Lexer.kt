@@ -187,7 +187,7 @@ private class Lexer(val source: String) {
 
     private fun handleInterpolationEnd() {
         // This is called when we see } and interpolationDepth > 0
-        advance() // consume }
+        // Note: The } has already been consumed by advance() in the main loop
         tokens.add(Token(TokenType.INTERPOLATION_END, "}", line, column - 1))
         interpolationDepth--
 
