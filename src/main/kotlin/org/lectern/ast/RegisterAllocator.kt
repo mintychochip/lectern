@@ -1,4 +1,4 @@
-package org.aincraft.ast
+package org.lectern.ast
 
 class RegisterAllocator(private val numRegs: Int = 16) {
     // virtual reg -> physical reg

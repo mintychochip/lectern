@@ -1,7 +1,7 @@
-package org.aincraft.ast
+package org.lectern.ast
 
-import org.aincraft.lang.IrInstr
-import org.aincraft.lang.IrLabel
+import org.lectern.lang.IrInstr
+import org.lectern.lang.IrLabel
 
 data class LiveRange(val reg: Int, val start: Int, var end: Int)
 class LivenessAnalyzer {
@@ -43,10 +43,7 @@ class LivenessAnalyzer {
         // Second pass: analyze instructions
         for ((idx, instr) in instrs.withIndex()) {
             when (instr) {
-                is IrInstr.LoadConst -> define(instr.dst, idx)
-                is IrInstr.LoadNull -> define(instr.dst, idx)
-                is IrInstr.LoadTrue -> define(instr.dst, idx)
-                is IrInstr.LoadFalse -> define(instr.dst, idx)
+                is IrInstr.LoadImm -> define(instr.dst, idx)
                 is IrInstr.LoadGlobal -> define(instr.dst, idx)
                 is IrInstr.StoreGlobal -> use(instr.src, idx)
                 is IrInstr.LoadFunc -> define(instr.dst, idx)

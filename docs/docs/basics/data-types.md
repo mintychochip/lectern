@@ -4,15 +4,15 @@ sidebar_position: 2
 
 # Data Types
 
-Explore the data types available in Ain.
+Explore the data types available in Lectern.
 
 ## Primitive Types
 
 ### Numbers
 
-Ain uses a single number type for integers and decimals:
+Lectern uses a single number type for integers and decimals:
 
-```ain
+```lectern
 let integer = 42
 let decimal = 3.14159
 let negative = -100
@@ -29,13 +29,13 @@ print(10 % 3)   // 1 (modulo)
 
 Text values enclosed in double quotes:
 
-```ain
+```lectern
 let greeting = "Hello, World!"
-let name = "Ain"
+let name = "Lectern"
 
 // String concatenation
 let message = greeting + " Welcome to " + name
-print(message)  // Hello, World! Welcome to Ain
+print(message)  // Hello, World! Welcome to Lectern
 
 // String length (if supported)
 let len = len(greeting)
@@ -45,7 +45,7 @@ let len = len(greeting)
 
 True or false values:
 
-```ain
+```lectern
 let isActive = true
 let isComplete = false
 
@@ -59,7 +59,7 @@ print(isActive || isComplete)  // true
 
 Represents the absence of a value:
 
-```ain
+```lectern
 let empty = null
 print(empty)  // null
 ```
@@ -70,7 +70,7 @@ print(empty)  // null
 
 Ordered collections of values:
 
-```ain
+```lectern
 let numbers = [1, 2, 3, 4, 5]
 let mixed = [1, "two", true]
 
@@ -85,7 +85,7 @@ numbers[0] = 10
 
 Key-value pairs:
 
-```ain
+```lectern
 let user = {
     "name": "John",
     "age": 30,
@@ -100,7 +100,7 @@ print(user["name"])  // John
 
 Check the type of a value:
 
-```ain
+```lectern
 print(type(42))       // "number"
 print(type("hello"))  // "string"
 print(type(true))     // "boolean"

@@ -3,7 +3,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Ain Programming Language',
+  title: 'Lectern Programming Language',
   tagline: 'A modern, expressive programming language',
   favicon: 'img/favicon.ico',
 
@@ -15,7 +15,7 @@ const config = {
   baseUrl: '/',
 
   organizationName: 'your-github-username',
-  projectName: 'ainscript',
+  projectName: 'lectern',
 
   onBrokenLinks: 'throw',
 
@@ -31,7 +31,7 @@ const config = {
       ({
         docs: {
           sidebarPath: './sidebars.js',
-          editUrl: 'https://github.com/your-github-username/ainscript/tree/main/docs/',
+          editUrl: 'https://github.com/your-github-username/lectern/tree/main/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -39,8 +39,8 @@ const config = {
             type: ['rss', 'atom'],
             xslt: true,
           },
-          blogTitle: 'Ain Blog',
-          blogDescription: 'Updates and articles about the Ain programming language',
+          blogTitle: 'Lectern Blog',
+          blogDescription: 'Updates and articles about the Lectern programming language',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -57,9 +57,9 @@ const config = {
         respectPrefersColorScheme: true,
       },
       navbar: {
-        title: 'Ain',
+        title: 'Lectern',
         logo: {
-          alt: 'Ain Logo',
+          alt: 'Lectern Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -76,7 +76,7 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/your-github-username/ainscript',
+            href: 'https://github.com/your-github-username/lectern',
             label: 'GitHub',
             position: 'right',
           },
@@ -103,7 +103,7 @@ const config = {
             items: [
               {
                 label: 'GitHub Discussions',
-                href: 'https://github.com/your-github-username/ainscript/discussions',
+                href: 'https://github.com/your-github-username/lectern/discussions',
               },
               {
                 label: 'Discord',
@@ -120,12 +120,12 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/your-github-username/ainscript',
+                href: 'https://github.com/your-github-username/lectern',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Ain Language. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Lectern Language. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,

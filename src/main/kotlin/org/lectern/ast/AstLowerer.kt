@@ -1,7 +1,7 @@
-package org.aincraft.ast
+package org.lectern.ast
 
-import org.aincraft.lang.*
-import org.aincraft.lang.IrInstr.*
+import org.lectern.lang.*
+import org.lectern.lang.IrInstr.*
 
 class AstLowerer {
     private val instrs = mutableListOf<IrInstr>()
@@ -58,7 +58,8 @@ class AstLowerer {
         if (stmt.value != null) {
             lowerExpr(stmt.value, dst)
         } else {
-            emit(IrInstr.LoadNull(dst))
+            val index = addConstant(Value.Null)
+            emit(IrInstr.LoadImm(dst, index))
         }
     }
 
@@ -164,7 +165,8 @@ class AstLowerer {
             emit(IrInstr.Return(src))
         } else {
             val dst = freshReg()
-            emit(IrInstr.LoadNull(dst))
+            val index = addConstant(Value.Null)
+            emit(IrInstr.LoadImm(dst, index))
             emit(IrInstr.Return(dst))
         }
     }
@@ -243,18 +245,9 @@ class AstLowerer {
 
     private fun lowerExpr(expr: Expr, dst: Int): Int = when (expr) {
         is Expr.LiteralExpr -> {
-            when (val v = expr.literal) {
-                is Value.Null -> { emit(LoadNull(dst)); dst }
-                is Value.Boolean -> {
-                    if (v.value) emit(LoadTrue(dst)) else emit(LoadFalse(dst))
-                    dst
-                }
-                else -> {
-                    val index = addConstant(v)
-                    emit(LoadConst(dst, index))
-                    dst
-                }
-            }
+            val index = addConstant(expr.literal)
+            emit(LoadImm(dst, index))
+            dst
         }
         is Expr.VariableExpr -> {
             val reg = locals[expr.name.lexeme]

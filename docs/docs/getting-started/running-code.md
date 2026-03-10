@@ -2,16 +2,16 @@
 sidebar_position: 3
 ---
 
-# Running Ain Code
+# Running Lectern Code
 
-Learn different ways to run your Ain programs.
+Learn different ways to run your Lectern programs.
 
 ## Using Gradle
 
-The standard way to run Ain programs:
+The standard way to run Lectern programs:
 
 ```bash
-./gradlew run --args="filename.ain"
+./gradlew run --args="filename.lectern"
 ```
 
 ## Running Multiple Files
@@ -19,7 +19,7 @@ The standard way to run Ain programs:
 You can pass multiple files:
 
 ```bash
-./gradlew run --args="main.ain utils.ain"
+./gradlew run --args="mlectern.lectern utils.lectern"
 ```
 
 ## Common Run Options
@@ -29,7 +29,7 @@ You can pass multiple files:
 For debugging output:
 
 ```bash
-./gradlew run --args="--debug filename.ain"
+./gradlew run --args="--debug filename.lectern"
 ```
 
 ### Help
@@ -42,7 +42,7 @@ View available options:
 
 ## REPL (Coming Soon)
 
-Ain will soon support an interactive REPL:
+Lectern will soon support an interactive REPL:
 
 ```bash
 ./gradlew run --args="--repl"

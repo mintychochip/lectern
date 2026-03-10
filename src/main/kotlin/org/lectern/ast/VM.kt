@@ -1,6 +1,6 @@
-package org.aincraft.lang
+package org.lectern.lang
 
-import org.aincraft.lang.Value.*
+import org.lectern.lang.Value.*
 
 class VM {
     val globals = mutableMapOf<String, Value>()
@@ -9,7 +9,8 @@ class VM {
         val chunk: Chunk,
         var ip: Int = 0,
         val regs: Array<Value?> = arrayOfNulls(16),
-        var returnDst: Int = 0  // Where to store the return value in caller
+        var returnDst: Int = 0,  // Where to store the return value in caller
+        val argBuffer: ArrayDeque<Value> = ArrayDeque()  // Staging buffer for PUSH_ARG
     )
 
     fun execute(chunk: Chunk) {
@@ -32,10 +33,7 @@ class VM {
             val imm    = (word shr 20) and 0xFFF
 
             when (opcode) {
-                OpCode.PUSH_CONST  -> frame.regs[dst] = frame.chunk.constants[imm]
-                OpCode.PUSH_NULL   -> frame.regs[dst] = Value.Null
-                OpCode.PUSH_TRUE   -> frame.regs[dst] = Value.Boolean.TRUE
-                OpCode.PUSH_FALSE  -> frame.regs[dst] = Value.Boolean.FALSE
+                OpCode.LOAD_IMM  -> frame.regs[dst] = frame.chunk.constants[imm]
 
                 OpCode.LOAD_GLOBAL  -> frame.regs[dst] = globals[frame.chunk.strings[imm]]
                     ?: error("Undefined global: ${frame.chunk.strings[imm]}")
@@ -82,14 +80,11 @@ class VM {
                     frame.regs[dst] = Function(funcChunk, requiredArity, defaults)
                 }
                 OpCode.CALL -> {
-                    // Read args from subsequent ARG instructions
+                    // Drain args from the arg buffer
                     val passedArgCount = imm
                     val args = (0 until passedArgCount).map { i ->
-                        val argWord = frame.chunk.code[frame.ip + i]
-                        val argSrc1 = (argWord shr 12) and 0x0F
-                        frame.regs[argSrc1] ?: error("Null arg at reg $argSrc1")
+                        frame.argBuffer.removeFirstOrNull() ?: error("Missing argument $i in arg buffer")
                     }
-                    frame.ip += passedArgCount  // Skip the ARG instructions
                     when (val func = frame.regs[src1]) {
                         is Value.Function -> {
                             val totalParams = func.defaults?.defaultChunks?.size ?: passedArgCount
@@ -148,7 +143,9 @@ class VM {
                         else -> error("Cannot call non-function: ${frame.regs[src1]}")
                     }
                 }
-                OpCode.ARG -> { /* consumed by CALL, should never execute standalone */ }
+                OpCode.PUSH_ARG -> {
+                    frame.argBuffer.addLast(frame.regs[src1] ?: error("Null value in PUSH_ARG at reg $src1 (ip=${frame.ip - 1}, chunk.constants=${frame.chunk.constants.take(5)}, strings=${frame.chunk.strings.take(3)})"))
+                }
                 OpCode.RETURN -> {
                     val returnVal = frame.regs[src1]
                     val returnDst = frame.returnDst
@@ -165,9 +162,7 @@ class VM {
                 OpCode.NEW_ARRAY -> {
                     val count = imm
                     val elements = (0 until count).map { i ->
-                        val argWord = frame.chunk.code[frame.ip++]
-                        val argSrc1 = (argWord shr 12) and 0x0F
-                        frame.regs[argSrc1] ?: error("Null array element at reg $argSrc1")
+                        frame.argBuffer.removeFirstOrNull() ?: error("Missing array element $i in arg buffer")
                     }
                     frame.regs[dst] = Value.List(elements.toMutableList())
                 }
@@ -175,32 +170,6 @@ class VM {
                     val obj = frame.regs[src1] ?: error("Cannot get field on null")
                     val fieldName = frame.chunk.strings[imm]
                     frame.regs[dst] = when (obj) {
-                        is Value.Range -> when (fieldName) {
-                            "iter" -> Value.NativeFunction { _ ->
-                                Value.Iterator(obj)
-                            }
-                            else -> error("Range has no field '$fieldName'")
-                        }
-                        is Value.Iterator -> when (fieldName) {
-                            "hasNext" -> Value.NativeFunction { _ ->
-                                val hasNext = when (val iterable = obj.iterable) {
-                                    is Value.Range -> obj.index < (iterable.end - iterable.start)
-                                    is Value.List -> obj.index < iterable.value.size
-                                    else -> error("Cannot iterate: $iterable")
-                                }
-                                if (hasNext) Value.Boolean.TRUE else Value.Boolean.FALSE
-                            }
-                            "next" -> Value.NativeFunction { _ ->
-                                val value = when (val iterable = obj.iterable) {
-                                    is Value.Range -> Value.Int(iterable.start + obj.index)
-                                    is Value.List -> iterable.value[obj.index]
-                                    else -> error("Cannot get value: $iterable")
-                                }
-                                obj.index++
-                                value
-                            }
-                            else -> error("Iterator has no field '$fieldName'")
-                        }
                         is Value.Instance -> {
                             // Check fields first
                             obj.fields[fieldName]?.let { it }
@@ -221,13 +190,10 @@ class VM {
                 OpCode.NEW_INSTANCE -> {
                     val classVal = frame.regs[src1] as? Value.Class
                         ?: error("Cannot create instance of non-class: ${frame.regs[src1]}")
-                    // Read constructor args from subsequent ARG instructions
+                    // Drain constructor args from arg buffer
                     val args = (0 until imm).map { i ->
-                        val argWord = frame.chunk.code[frame.ip + i]
-                        val argSrc1 = (argWord shr 12) and 0x0F
-                        frame.regs[argSrc1] ?: error("Null arg at reg $argSrc1")
+                        frame.argBuffer.removeFirstOrNull() ?: error("Missing argument $i in arg buffer")
                     }
-                    frame.ip += imm  // Skip the ARG instructions
 
                     // Allocate the instance
                     val instance = Value.Instance(classVal.descriptor)
@@ -255,6 +221,12 @@ class VM {
                     val value = frame.regs[src1]
                     val typeName = frame.chunk.strings[imm]
                     val result = when (value) {
+                        is Value.Int -> typeName == "int"
+                        is Value.Float -> typeName == "float"
+                        is Value.Double -> typeName == "double"
+                        is Value.String -> typeName == "string"
+                        is Value.Boolean -> typeName == "bool"
+                        is Value.List -> typeName == "list"
                         is Value.Instance -> isInTypeChain(value.clazz, typeName)
                         is Value.Class -> value.descriptor.name == typeName
                         else -> false
@@ -279,7 +251,7 @@ class VM {
                         ?: error("Range start must be int: ${frame.regs[src1]}")
                     val end = (frame.regs[src2] as? Value.Int)?.value
                         ?: error("Range end must be int: ${frame.regs[src2]}")
-                    frame.regs[dst] = Value.Range(start, end)
+                    frame.regs[dst] = Builtins.newRange(start, end)
                 }
                 OpCode.GET_INDEX -> {
                     val list = frame.regs[src1] as? Value.List
@@ -424,10 +396,7 @@ class VM {
             val imm = (word shr 20) and 0xFFF
 
             when (opcode) {
-                OpCode.PUSH_CONST -> frame.regs[dst] = frame.chunk.constants[imm]
-                OpCode.PUSH_NULL -> frame.regs[dst] = Value.Null
-                OpCode.PUSH_TRUE -> frame.regs[dst] = Value.Boolean.TRUE
-                OpCode.PUSH_FALSE -> frame.regs[dst] = Value.Boolean.FALSE
+                OpCode.LOAD_IMM -> frame.regs[dst] = frame.chunk.constants[imm]
                 OpCode.LOAD_GLOBAL -> frame.regs[dst] = globals[frame.chunk.strings[imm]]
                     ?: error("Undefined global in default value: ${frame.chunk.strings[imm]}")
                 OpCode.ADD -> {

@@ -3,17 +3,17 @@ sidebar_position: 1
 slug: /
 ---
 
-# Welcome to Ain
+# Welcome to Lectern
 
-Ain is a modern, expressive programming language designed for simplicity and power.
+Lectern is a modern, expressive programming language designed for simplicity and power.
 
 ## Overview
 
-Ain combines clean syntax with powerful features to make programming enjoyable and productive. Whether you're building scripts, applications, or exploring language design, Ain provides the tools you need.
+Lectern combines clean syntax with powerful features to make programming enjoyable and productive. Whether you're building scripts, applications, or exploring language design, Lectern provides the tools you need.
 
 ## Features
 
-- **Clean Syntax** - Readable and expressive code that's easy to write and maintain
+- **Clean Syntax** - Readable and expressive code that's easy to write and mlecterntlectern
 - **Strong Typing** - Type safety with type inference for cleaner code
 - **First-class Functions** - Functions as values, closures, and higher-order functions
 - **Data Structures** - Built-in support for arrays and maps
@@ -21,7 +21,7 @@ Ain combines clean syntax with powerful features to make programming enjoyable a
 
 ## Quick Example
 
-```ain
+```lec
 // Define a function to calculate factorial
 fn factorial(n) {
     if n <= 1 {
@@ -40,4 +40,4 @@ Ready to start coding? Head over to the [Installation Guide](/docs/getting-start
 
 ## Contributing
 
-Ain is open source! Check out the [GitHub repository](https://github.com/your-github-username/ainscript) to contribute.
+Lectern is open source! Check out the [GitHub repository](https://github.com/your-github-username/lectern) to contribute.

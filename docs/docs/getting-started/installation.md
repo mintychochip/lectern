@@ -4,11 +4,11 @@ sidebar_position: 1
 
 # Installation
 
-Learn how to install and set up Ain on your system.
+Learn how to install and set up Lectern on your system.
 
 ## Prerequisites
 
-- **Java Runtime Environment (JRE) 11+** - Ain runs on the JVM
+- **Java Runtime Environment (JRE) 11+** - Lectern runs on the JVM
 - **Gradle** (optional) - For building from source
 
 ## Building from Source
@@ -16,8 +16,8 @@ Learn how to install and set up Ain on your system.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-github-username/ainscript.git
-cd ainscript
+git clone https://github.com/your-github-username/lectern.git
+cd lectern
 ```
 
 ### 2. Build with Gradle
@@ -26,10 +26,10 @@ cd ainscript
 ./gradlew build
 ```
 
-### 3. Run Ain
+### 3. Run Lectern
 
 ```bash
-./gradlew run --args="your-file.ain"
+./gradlew run --args="your-file.lec"
 ```
 
 ## Development Setup
@@ -43,22 +43,22 @@ For development, you can use:
 
 Create a simple test file:
 
-```ain title="hello.ain"
-print("Hello, Ain!")
+```lec title="hello.lec"
+print("Hello, Lectern!")
 ```
 
 Run it:
 
 ```bash
-./gradlew run --args="hello.ain"
+./gradlew run --args="hello.lec"
 ```
 
 You should see:
 
 ```
-Hello, Ain!
+Hello, Lectern!
 ```
 
 ## Next Steps
 
-Now that you have Ain installed, let's write your [First Program](/docs/getting-started/first-program)!
+Now that you have Lectern installed, let's write your [First Program](/docs/getting-started/first-program)!

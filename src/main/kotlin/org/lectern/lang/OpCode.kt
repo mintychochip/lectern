@@ -1,12 +1,9 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 enum class OpCode(val code: Byte) {
     // stack
-    PUSH_CONST(0x00),
+    LOAD_IMM(0x00),
     POP(0x01),
-    PUSH_NULL(0x02),
-    PUSH_TRUE(0x03),
-    PUSH_FALSE(0x04),  // was 0x03, duplicate fixed
 
     // locals/globals
     LOAD_GLOBAL(0x05),
@@ -44,7 +41,7 @@ enum class OpCode(val code: Byte) {
     BREAK(0x19),
     NEXT(0x1A),
     MOD(0x1B),
-    ARG(0x1C),
+    PUSH_ARG(0x1C),
     GET_FIELD(0x1D),   // dst = src1.field_name_idx
     SET_FIELD(0x1E),   // src1.field_name_idx = src2
     NEW_INSTANCE(0x1F), // dst = new instance of class in src1, argc in imm

@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 private class Lexer(val source: String) {
 

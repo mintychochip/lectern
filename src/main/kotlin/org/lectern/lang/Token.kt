@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 enum class TokenType {
     KW_BOOL,

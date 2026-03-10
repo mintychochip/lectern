@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 enum class Register(val id: Int) {
     R0(0), R1(1), R2(2), R3(3),

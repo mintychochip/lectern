@@ -4,14 +4,14 @@ sidebar_position: 1
 
 # Variables
 
-Learn how to declare and use variables in Ain.
+Learn how to declare and use variables in Lectern.
 
 ## Variable Declaration
 
 Use the `let` keyword to declare variables:
 
-```ain
-let name = "Ain"
+```lectern
+let name = "Lectern"
 let age = 25
 let isActive = true
 ```
@@ -20,7 +20,7 @@ let isActive = true
 
 Reassign variables after declaration:
 
-```ain
+```lectern
 let count = 0
 count = 1
 count = count + 1
@@ -31,7 +31,7 @@ print(count)  // Output: 2
 
 Variables are scoped to the block they're declared in:
 
-```ain
+```lectern
 let global = "I'm global"
 
 fn example() {
@@ -49,10 +49,10 @@ print(global)  // Works
 Variable names must:
 
 - Start with a letter or underscore
-- Contain only letters, numbers, and underscores
+- Contlectern only letters, numbers, and underscores
 - Not be a reserved keyword
 
-```ain
+```lectern
 // Valid names
 let myVar = 1
 let _private = 2

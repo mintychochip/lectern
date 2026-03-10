@@ -4,20 +4,20 @@ sidebar_position: 2
 
 # Your First Program
 
-Let's write and understand your first Ain program.
+Let's write and understand your first Lectern program.
 
 ## Hello World
 
-Create a file named `hello.ain`:
+Create a file named `hello.lectern`:
 
-```ain title="hello.ain"
+```lectern title="hello.lectern"
 print("Hello, World!")
 ```
 
 Run it:
 
 ```bash
-./gradlew run --args="hello.ain"
+./gradlew run --args="hello.lectern"
 ```
 
 Output:
@@ -30,9 +30,9 @@ Hello, World!
 
 Let's look at a slightly more complex program:
 
-```ain
+```lectern
 // This is a comment
-let name = "Ain"
+let name = "Lectern"
 let version = 1.0
 
 // Define a function
@@ -53,9 +53,9 @@ print(greet(name))
 
 ## Variables and Types
 
-Ain supports several data types:
+Lectern supports several data types:
 
-```ain
+```lectern
 let integer = 42          // Number
 let float = 3.14          // Number (decimal)
 let string = "Hello"      // String

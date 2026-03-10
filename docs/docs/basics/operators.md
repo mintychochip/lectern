@@ -4,11 +4,11 @@ sidebar_position: 3
 
 # Operators
 
-Learn the operators available in Ain.
+Learn the operators available in Lectern.
 
 ## Arithmetic Operators
 
-```ain
+```lectern
 let a = 10
 let b = 3
 
@@ -16,12 +16,12 @@ print(a + b)   // 13 (addition)
 print(a - b)   // 7  (subtraction)
 print(a * b)   // 30 (multiplication)
 print(a / b)   // 3.33... (division)
-print(a % b)   // 1  (modulo/remainder)
+print(a % b)   // 1  (modulo/remlecternder)
 ```
 
 ## Comparison Operators
 
-```ain
+```lectern
 let x = 5
 let y = 10
 
@@ -35,7 +35,7 @@ print(x >= y)  // false (greater or equal)
 
 ## Logical Operators
 
-```ain
+```lectern
 let a = true
 let b = false
 
@@ -46,7 +46,7 @@ print(!a)      // false (not)
 
 ## String Operators
 
-```ain
+```lectern
 let first = "Hello"
 let last = "World"
 
@@ -57,7 +57,7 @@ print(full)  // "Hello World"
 
 ## Assignment Operators
 
-```ain
+```lectern
 let count = 0
 
 count = 5      // Simple assignment
@@ -79,7 +79,7 @@ Operators are evaluated in this order (highest to lowest):
 
 Use parentheses to control order:
 
-```ain
+```lectern
 let result = (2 + 3) * 4  // 20
 let other = 2 + 3 * 4     // 14
 ```

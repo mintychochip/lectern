@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 /*
 | bits 0-7  | bits 8-11  | bits 12-15 | bits 16-19 | bits 20-31 |
@@ -49,13 +49,15 @@ class Chunk {
     }
 
     fun disassemble() {
+        println("Constants: $constants")
+        println("Strings: $strings")
         code.forEachIndexed { idx, word ->
             val opcode = word and 0xFF
             val dst    = (word shr 8)  and 0x0F
             val src1   = (word shr 12) and 0x0F
             val src2   = (word shr 16) and 0x0F
             val imm    = (word shr 20) and 0xFFF
-            println("$idx: opcode=$opcode dst=r$dst src1=r$src1 src2=r$src2 imm=$imm")
+            println("$idx: word=$word opcode=$opcode dst=r$dst src1=r$src1 src2=r$src2 imm=$imm")
         }
     }
 }

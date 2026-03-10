@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 class Parser(private val tokens: List<Token>) {
     private var cursor = 0
@@ -238,7 +238,7 @@ class Parser(private val tokens: List<Token>) {
             // 'is' takes a type name (identifier), not an expression
             if (token.type == TokenType.KW_IS) {
                 advance()
-                val typeName = consume(TokenType.IDENTIFIER, "Expected type name after 'is'")
+                val typeName = parseType()
                 left = Expr.IsExpr(left, typeName)
                 continue
             }

@@ -1,0 +1,10 @@
+class Point {
+  fn init(x, y) {
+    self.x = x
+    self.y = y
+  }
+}
+
+let p = Point(2,3)
+p.x = 3
+print(p.x)

@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 sealed class Expr {
 
@@ -87,7 +87,7 @@ sealed class Stmt {
         }
     }
 
-    data class ClassStmt(val name: Token, val superClass: Token?, val body: BlockStmt) : Stmt()
+        data class ClassStmt(val name: Token, val superClass: Token?, val body: BlockStmt) : Stmt()
     data class ExprStmt(val expr: Expr) : Stmt()
     data class EnumStmt(val name: Token, val values: List<Token>) : Stmt()
     data class VarStmt(val keyword: Token, val name: Token, val value: Expr?) : Stmt()
@@ -112,4 +112,6 @@ sealed class Stmt {
         data class Else(val block: BlockStmt) : ElseBranch()
         data class ElseIf(val stmt: IfStmt) : ElseBranch()
     }
+
+    data class ConfigStmt(val name: Token, val body: List<VarStmt>) : Stmt()
 }

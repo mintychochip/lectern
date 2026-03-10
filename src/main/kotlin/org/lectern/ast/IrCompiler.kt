@@ -1,8 +1,8 @@
-package org.aincraft.lang
+package org.lectern.lang
 
-import org.aincraft.ast.AstLowerer
-import org.aincraft.ast.LivenessAnalyzer
-import org.aincraft.ast.RegisterAllocator
+import org.lectern.ast.AstLowerer
+import org.lectern.ast.LivenessAnalyzer
+import org.lectern.ast.RegisterAllocator
 
 class IrCompiler {
     fun compile(result: AstLowerer.LoweredResult): Chunk {
@@ -17,26 +17,13 @@ class IrCompiler {
                 labelOffsets[instr.label.id] = offset
             } else {
                 offset++
-                // CALL, NEW_ARRAY, and NEW_INSTANCE emit extra ARG instructions for each argument
-                if (instr is IrInstr.Call) {
-                    offset += instr.args.size
-                }
-                if (instr is IrInstr.NewArray) {
-                    offset += instr.elements.size
-                }
-                if (instr is IrInstr.NewInstance) {
-                    offset += instr.args.size
-                }
             }
         }
 
         // second pass: emit bytecode
         for (instr in result.instrs) {
             when (instr) {
-                is IrInstr.LoadConst -> chunk.write(OpCode.PUSH_CONST, dst = instr.dst, imm = instr.index)
-                is IrInstr.LoadNull -> chunk.write(OpCode.PUSH_NULL, dst = instr.dst)
-                is IrInstr.LoadTrue -> chunk.write(OpCode.PUSH_TRUE, dst = instr.dst)
-                is IrInstr.LoadFalse -> chunk.write(OpCode.PUSH_FALSE, dst = instr.dst)
+                is IrInstr.LoadImm -> chunk.write(OpCode.LOAD_IMM, dst = instr.dst, imm = instr.index)
                 is IrInstr.LoadGlobal -> chunk.write(OpCode.LOAD_GLOBAL, dst = instr.dst, imm = chunk.addString(instr.name))
                 is IrInstr.StoreGlobal -> chunk.write(OpCode.STORE_GLOBAL, src1 = instr.src, imm = chunk.addString(instr.name))
                 is IrInstr.Move -> chunk.write(OpCode.MOVE, dst = instr.dst, src1 = instr.src)
@@ -69,11 +56,11 @@ class IrCompiler {
                 is IrInstr.Jump -> chunk.write(OpCode.JUMP, imm = labelOffsets[instr.target.id]!!)
                 is IrInstr.JumpIfFalse -> chunk.write(OpCode.JUMP_IF_FALSE, src1 = instr.src, imm = labelOffsets[instr.target.id]!!)
                 is IrInstr.Call -> {
-                    chunk.write(OpCode.CALL, dst = instr.dst, src1 = instr.func, imm = instr.args.size)
-                    // encode each arg reg as a subsequent word
+                    // First push all arguments
                     for (arg in instr.args) {
-                        chunk.write(OpCode.ARG, src1 = arg)
+                        chunk.write(OpCode.PUSH_ARG, src1 = arg)
                     }
+                    chunk.write(OpCode.CALL, dst = instr.dst, src1 = instr.func, imm = instr.args.size)
                 }
                 is IrInstr.LoadFunc -> {
                     // Run register allocation on the function body
@@ -101,7 +88,11 @@ class IrCompiler {
                             null
                         }
                     }
-                    chunk.functionDefaults.add(FunctionDefaults(defaultChunkIndices))
+                    // Ensure functionDefaults has enough entries - functionDefaults[i] must correspond to functions[i]
+                    while (chunk.functionDefaults.size <= idx) {
+                        chunk.functionDefaults.add(FunctionDefaults(emptyList()))
+                    }
+                    chunk.functionDefaults[idx] = FunctionDefaults(defaultChunkIndices)
 
                     chunk.write(OpCode.LOAD_FUNC, dst = instr.dst, imm = idx)
                 }
@@ -110,20 +101,22 @@ class IrCompiler {
                 is IrInstr.Next -> chunk.write(OpCode.NEXT)
                 is IrInstr.Label -> { /* skip, resolved in first pass */ }
                 is IrInstr.NewArray -> {
-                    chunk.write(OpCode.NEW_ARRAY, dst = instr.dst, imm = instr.elements.size)
+                    // First push all elements
                     for (elem in instr.elements) {
-                        chunk.write(OpCode.ARG, src1 = elem)
+                        chunk.write(OpCode.PUSH_ARG, src1 = elem)
                     }
+                    chunk.write(OpCode.NEW_ARRAY, dst = instr.dst, imm = instr.elements.size)
                 }
                 is IrInstr.GetIndex -> chunk.write(OpCode.GET_INDEX, dst = instr.dst, src1 = instr.obj, src2 = instr.index)
                 is IrInstr.SetIndex -> chunk.write(OpCode.SET_INDEX, src1 = instr.obj, src2 = instr.index, imm = instr.src)
                 is IrInstr.GetField -> chunk.write(OpCode.GET_FIELD, dst = instr.dst, src1 = instr.obj, imm = chunk.addString(instr.name))
                 is IrInstr.SetField -> chunk.write(OpCode.SET_FIELD, src1 = instr.obj, src2 = instr.src, imm = chunk.addString(instr.name))
                 is IrInstr.NewInstance -> {
-                    chunk.write(OpCode.NEW_INSTANCE, dst = instr.dst, src1 = instr.classReg, imm = instr.args.size)
+                    // First push all arguments
                     for (arg in instr.args) {
-                        chunk.write(OpCode.ARG, src1 = arg)
+                        chunk.write(OpCode.PUSH_ARG, src1 = arg)
                     }
+                    chunk.write(OpCode.NEW_INSTANCE, dst = instr.dst, src1 = instr.classReg, imm = instr.args.size)
                 }
                 is IrInstr.IsType -> chunk.write(OpCode.IS_TYPE, dst = instr.dst, src1 = instr.src, imm = chunk.addString(instr.typeName))
                 is IrInstr.LoadClass -> {
@@ -154,10 +147,7 @@ class IrCompiler {
         fun r(reg: Int) = allocation[reg] ?: error("v$reg not allocated — needs spill handling")
         return instrs.map { instr ->
             when (instr) {
-                is IrInstr.LoadConst -> instr.copy(dst = r(instr.dst))
-                is IrInstr.LoadNull -> instr.copy(dst = r(instr.dst))
-                is IrInstr.LoadTrue -> instr.copy(dst = r(instr.dst))
-                is IrInstr.LoadFalse -> instr.copy(dst = r(instr.dst))
+                is IrInstr.LoadImm -> instr.copy(dst = r(instr.dst))
                 is IrInstr.LoadGlobal -> instr.copy(dst = r(instr.dst))
                 is IrInstr.StoreGlobal -> instr.copy(src = r(instr.src))
                 is IrInstr.Move -> instr.copy(dst = r(instr.dst), src = r(instr.src))

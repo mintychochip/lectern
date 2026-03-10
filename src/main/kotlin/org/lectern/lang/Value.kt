@@ -1,4 +1,4 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 data class ClassDescriptor(
     val name: String,
@@ -16,12 +16,6 @@ sealed class Value {
     data class Class(val descriptor: ClassDescriptor) : Value()
 
     data class List(val value: MutableList<Value>) : Value()
-
-    data class Range(val start: kotlin.Int, val end: kotlin.Int) : Value()
-
-    data class Iterator(val iterable: Value) : Value() {
-        var index: kotlin.Int = 0
-    }
 
     data class Map(val entries: MutableMap<Value, Value> = mutableMapOf()) : Value()
 

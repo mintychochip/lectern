@@ -1,10 +1,7 @@
-package org.aincraft.lang
+package org.lectern.lang
 
 sealed class IrInstr {
-    data class LoadConst(val dst: Int, val index: Int) : IrInstr()
-    data class LoadNull(val dst: Int) : IrInstr()
-    data class LoadTrue(val dst: Int) : IrInstr()
-    data class LoadFalse(val dst: Int) : IrInstr()
+    data class LoadImm(val dst: Int, val index: Int) : IrInstr()
     data class LoadGlobal(val dst: Int, val name: String) : IrInstr()
     data class StoreGlobal(val name: String, val src: Int) : IrInstr()
     data class BinaryOp(val dst: Int, val op: TokenType, val src1: Int, val src2: Int) : IrInstr()

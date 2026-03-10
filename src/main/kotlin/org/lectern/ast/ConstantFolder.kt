@@ -1,9 +1,9 @@
-package org.aincraft.ast
+package org.lectern.ast
 
-import org.aincraft.lang.Expr
-import org.aincraft.lang.Stmt
-import org.aincraft.lang.TokenType
-import org.aincraft.lang.Value
+import org.lectern.lang.Expr
+import org.lectern.lang.Stmt
+import org.lectern.lang.TokenType
+import org.lectern.lang.Value
 
 class ConstantFolder {
     fun fold(expr: Expr): Expr = when (expr) {
