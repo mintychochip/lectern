@@ -43,8 +43,8 @@ fun main(args: Array<String>) {
     val ssaResult = AstLowerer.LoweredResult(ssaDeconstructed, result.constants)
 
     val ranges = LivenessAnalyzer().analyze(ssaResult.instrs)
-    val allocation = RegisterAllocator().allocate(ranges)
-    val rewritten = rewrite(ssaResult.instrs, allocation)
+    val allocResult = RegisterAllocator().allocate(ranges)
+    val rewritten = rewrite(ssaResult.instrs, allocResult.allocation)
     val chunk = IrCompiler().compile(AstLowerer.LoweredResult(rewritten, ssaResult.constants))
     println("\n=== Bytecode ===")
     chunk.disassemble()

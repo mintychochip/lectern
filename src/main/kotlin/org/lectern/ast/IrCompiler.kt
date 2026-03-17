@@ -71,8 +71,8 @@ class IrCompiler {
 
                     // Run register allocation on the function body
                     val funcRanges = LivenessAnalyzer().analyze(funcDeconstructed)
-                    val funcAllocation = RegisterAllocator().allocate(funcRanges, instr.arity)
-                    val funcRewritten = rewriteRegisters(funcDeconstructed, funcAllocation)
+                    val funcAllocResult = RegisterAllocator().allocate(funcRanges, instr.arity)
+                    val funcRewritten = rewriteRegisters(funcDeconstructed, funcAllocResult.allocation)
                     val funcResult = AstLowerer.LoweredResult(funcRewritten, instr.constants)
                     val funcChunk = IrCompiler().compile(funcResult)
                     val idx = chunk.functions.size
@@ -83,8 +83,8 @@ class IrCompiler {
                         if (defaultInfo != null) {
                             // Compile the default value expression
                             val defaultRanges = LivenessAnalyzer().analyze(defaultInfo.instrs)
-                            val defaultAllocation = RegisterAllocator().allocate(defaultRanges, 0)
-                            val defaultRewritten = rewriteRegisters(defaultInfo.instrs, defaultAllocation)
+                            val defaultAllocResult = RegisterAllocator().allocate(defaultRanges, 0)
+                            val defaultRewritten = rewriteRegisters(defaultInfo.instrs, defaultAllocResult.allocation)
                             val defaultResult = AstLowerer.LoweredResult(defaultRewritten, defaultInfo.constants)
                             val defaultChunk = IrCompiler().compile(defaultResult)
                             val defaultIdx = chunk.functions.size
@@ -134,8 +134,8 @@ class IrCompiler {
                         val methodDeconstructed = SsaDeconstructor.deconstruct(methodSsa)
 
                         val funcRanges = LivenessAnalyzer().analyze(methodDeconstructed)
-                        val funcAllocation = RegisterAllocator().allocate(funcRanges, methodInfo.arity)
-                        val funcRewritten = rewriteRegisters(methodDeconstructed, funcAllocation)
+                        val methodAllocResult = RegisterAllocator().allocate(funcRanges, methodInfo.arity)
+                        val funcRewritten = rewriteRegisters(methodDeconstructed, methodAllocResult.allocation)
                         val funcResult = AstLowerer.LoweredResult(funcRewritten, methodInfo.constants)
                         val funcChunk = IrCompiler().compile(funcResult)
                         val funcIdx = chunk.functions.size
