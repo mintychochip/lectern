@@ -7,6 +7,7 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 private fun compileAndRun(source: String): List<String> {
     val output = mutableListOf<String>()
@@ -510,5 +511,29 @@ class VMTest {
             """.trimIndent()
         )
         assertEquals(listOf("11"), output)
+    }
+
+    @Test
+    fun testConstDeclarationWorks() {
+        val output = compileAndRun(
+            """
+            const x = 42
+            print(x)
+            """.trimIndent()
+        )
+        assertEquals(listOf("42"), output)
+    }
+
+    @Test
+    fun testConstReassignmentThrows() {
+        val exception = assertFailsWith<RuntimeException> {
+            compileAndRun(
+                """
+                const x = 1
+                x = 2
+                """.trimIndent()
+            )
+        }
+        assertTrue(exception.message?.contains("const") == true, "Error should mention const")
     }
 }

@@ -9,6 +9,7 @@ class AstLowerer {
     private val constants = mutableListOf<Value>()
     private var regCounter = 0
     private val locals = mutableMapOf<String, Int>()
+    private val constLocals = mutableSetOf<String>()
     private var breakLabel: IrLabel? = null
     private var nextLabel: IrLabel? = null
     private var lambdaCounter = 0
@@ -115,12 +116,17 @@ class AstLowerer {
             val index = addConstant(Value.Null)
             emit(IrInstr.LoadImm(dst, index))
         }
+        if (stmt.keyword.type == TokenType.KW_CONST) {
+            constLocals.add(stmt.name.lexeme)
+        }
     }
 
     private fun lowerBlock(stmt: Stmt.BlockStmt) {
-        val before = locals.toMap()
+        val beforeLocals = locals.toMap()
+        val beforeConsts = constLocals.toSet()
         for (s in stmt.stmts) lowerStmt(s)
-        locals.keys.retainAll(before.keys)
+        locals.keys.retainAll(beforeLocals.keys)
+        constLocals.retainAll(beforeConsts)
     }
 
     private fun lowerIf(stmt: Stmt.IfStmt) {
@@ -386,6 +392,9 @@ class AstLowerer {
                 }
                 when (expr.target) {
                     is Expr.VariableExpr -> {
+                        if (expr.target.name.lexeme in constLocals) {
+                            error("Cannot reassign const '${expr.target.name.lexeme}'")
+                        }
                         val reg = locals[expr.target.name.lexeme]
                         if (reg != null) {
                             // Compute reg = reg op value
@@ -436,6 +445,9 @@ class AstLowerer {
                         srcReg
                     }
                     is Expr.VariableExpr -> {
+                        if (expr.target.name.lexeme in constLocals) {
+                            error("Cannot reassign const '${expr.target.name.lexeme}'")
+                        }
                         val reg = locals[expr.target.name.lexeme]
                         if (reg != null) {
                             lowerExpr(expr.value, reg)
