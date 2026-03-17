@@ -536,4 +536,29 @@ class VMTest {
         }
         assertTrue(exception.message?.contains("const") == true, "Error should mention const")
     }
+
+    @Test
+    fun testStringEscapeNewline() {
+        val output = compileAndRun("""print("a\nb")""")
+        // \n should be unescaped to actual newline char in the Lectern string
+        assertEquals(listOf("a\nb"), output)
+    }
+
+    @Test
+    fun testStringEscapeTab() {
+        val output = compileAndRun("""print("a\tb")""")
+        assertEquals(listOf("a\tb"), output)
+    }
+
+    @Test
+    fun testStringEscapeBackslash() {
+        val output = compileAndRun("""print("a\\b")""")
+        assertEquals(listOf("a\\b"), output)
+    }
+
+    @Test
+    fun testStringEscapeQuote() {
+        val output = compileAndRun("""print("say \"hi\"")""")
+        assertEquals(listOf("""say "hi""""), output)
+    }
 }

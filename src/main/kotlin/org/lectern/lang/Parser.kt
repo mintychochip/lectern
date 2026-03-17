@@ -1,5 +1,25 @@
 package org.lectern.lang
 
+private fun unescape(s: String): String = buildString {
+    var i = 0
+    while (i < s.length) {
+        if (s[i] == '\\' && i + 1 < s.length) {
+            when (s[i + 1]) {
+                'n'  -> { append('\n'); i += 2 }
+                't'  -> { append('\t'); i += 2 }
+                'r'  -> { append('\r'); i += 2 }
+                '"'  -> { append('"');  i += 2 }
+                '\\' -> { append('\\'); i += 2 }
+                '$'  -> { append('$');  i += 2 }
+                else -> { append(s[i]); i++ }
+            }
+        } else {
+            append(s[i])
+            i++
+        }
+    }
+}
+
 class Parser(private val tokens: List<Token>) {
     private var cursor = 0
 
@@ -350,9 +370,9 @@ class Parser(private val tokens: List<Token>) {
                 // Check if this is the start of an interpolated string
                 if (check(TokenType.INTERPOLATION_START)) {
                     advance()  // consume INTERPOLATION_START
-                    parseInterpolatedString(Expr.LiteralExpr(Value.String(value)))
+                    parseInterpolatedString(Expr.LiteralExpr(Value.String(unescape(value))))
                 } else {
-                    Expr.LiteralExpr(Value.String(value))
+                    Expr.LiteralExpr(Value.String(unescape(value)))
                 }
             }
             TokenType.INTERPOLATION_START -> {
@@ -449,7 +469,7 @@ class Parser(private val tokens: List<Token>) {
                 // There's string content after the interpolation
                 val stringToken = advance()
                 val stringValue = stringToken.lexeme.substring(1, stringToken.lexeme.length - 1)
-                result = Expr.BinaryExpr(result, plusToken, Expr.LiteralExpr(Value.String(stringValue)))
+                result = Expr.BinaryExpr(result, plusToken, Expr.LiteralExpr(Value.String(unescape(stringValue))))
 
                 // Check if there's another interpolation
                 if (check(TokenType.INTERPOLATION_START)) {
