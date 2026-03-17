@@ -3,6 +3,7 @@ package org.lectern.lang
 import org.lectern.ast.AstLowerer
 import org.lectern.ast.LivenessAnalyzer
 import org.lectern.ast.RegisterAllocator
+import org.lectern.ast.SpillInserter
 import org.lectern.ssa.SsaBuilder
 import org.lectern.ssa.SsaDeconstructor
 
@@ -72,9 +73,10 @@ class IrCompiler {
                     // Run register allocation on the function body
                     val funcRanges = LivenessAnalyzer().analyze(funcDeconstructed)
                     val funcAllocResult = RegisterAllocator().allocate(funcRanges, instr.arity)
-                    val funcRewritten = rewriteRegisters(funcDeconstructed, funcAllocResult.allocation)
-                    val funcResult = AstLowerer.LoweredResult(funcRewritten, instr.constants)
+                    val funcResolved = SpillInserter().insert(funcDeconstructed, funcAllocResult, funcRanges)
+                    val funcResult = AstLowerer.LoweredResult(funcResolved, instr.constants)
                     val funcChunk = IrCompiler().compile(funcResult)
+                    funcChunk.spillSlotCount = funcAllocResult.spillSlotCount
                     val idx = chunk.functions.size
                     chunk.functions.add(funcChunk)
 
@@ -84,9 +86,10 @@ class IrCompiler {
                             // Compile the default value expression
                             val defaultRanges = LivenessAnalyzer().analyze(defaultInfo.instrs)
                             val defaultAllocResult = RegisterAllocator().allocate(defaultRanges, 0)
-                            val defaultRewritten = rewriteRegisters(defaultInfo.instrs, defaultAllocResult.allocation)
-                            val defaultResult = AstLowerer.LoweredResult(defaultRewritten, defaultInfo.constants)
+                            val defaultResolved = SpillInserter().insert(defaultInfo.instrs, defaultAllocResult, defaultRanges)
+                            val defaultResult = AstLowerer.LoweredResult(defaultResolved, defaultInfo.constants)
                             val defaultChunk = IrCompiler().compile(defaultResult)
+                            defaultChunk.spillSlotCount = defaultAllocResult.spillSlotCount
                             val defaultIdx = chunk.functions.size
                             chunk.functions.add(defaultChunk)
                             defaultIdx
@@ -135,9 +138,10 @@ class IrCompiler {
 
                         val funcRanges = LivenessAnalyzer().analyze(methodDeconstructed)
                         val methodAllocResult = RegisterAllocator().allocate(funcRanges, methodInfo.arity)
-                        val funcRewritten = rewriteRegisters(methodDeconstructed, methodAllocResult.allocation)
-                        val funcResult = AstLowerer.LoweredResult(funcRewritten, methodInfo.constants)
+                        val methodResolved = SpillInserter().insert(methodDeconstructed, methodAllocResult, funcRanges)
+                        val funcResult = AstLowerer.LoweredResult(methodResolved, methodInfo.constants)
                         val funcChunk = IrCompiler().compile(funcResult)
+                        funcChunk.spillSlotCount = methodAllocResult.spillSlotCount
                         val funcIdx = chunk.functions.size
                         chunk.functions.add(funcChunk)
                         methodFuncIndices[methodName] = funcIdx
@@ -153,32 +157,5 @@ class IrCompiler {
         }
 
         return chunk
-    }
-
-    private fun rewriteRegisters(instrs: List<IrInstr>, allocation: Map<Int, Int>): List<IrInstr> {
-        fun r(reg: Int) = allocation[reg] ?: error("v$reg not allocated — needs spill handling")
-        return instrs.map { instr ->
-            when (instr) {
-                is IrInstr.LoadImm -> instr.copy(dst = r(instr.dst))
-                is IrInstr.LoadGlobal -> instr.copy(dst = r(instr.dst))
-                is IrInstr.StoreGlobal -> instr.copy(src = r(instr.src))
-                is IrInstr.Move -> instr.copy(dst = r(instr.dst), src = r(instr.src))
-                is IrInstr.BinaryOp -> instr.copy(dst = r(instr.dst), src1 = r(instr.src1), src2 = r(instr.src2))
-                is IrInstr.UnaryOp -> instr.copy(dst = r(instr.dst), src = r(instr.src))
-                is IrInstr.Call -> instr.copy(dst = r(instr.dst), func = r(instr.func), args = instr.args.map { r(it) })
-                is IrInstr.NewArray -> instr.copy(dst = r(instr.dst), elements = instr.elements.map { r(it) })
-                is IrInstr.GetIndex -> instr.copy(dst = r(instr.dst), obj = r(instr.obj), index = r(instr.index))
-                is IrInstr.SetIndex -> instr.copy(obj = r(instr.obj), index = r(instr.index), src = r(instr.src))
-                is IrInstr.GetField -> instr.copy(dst = r(instr.dst), obj = r(instr.obj))
-                is IrInstr.SetField -> instr.copy(obj = r(instr.obj), src = r(instr.src))
-                is IrInstr.NewInstance -> instr.copy(dst = r(instr.dst), classReg = r(instr.classReg), args = instr.args.map { r(it) })
-                is IrInstr.IsType -> instr.copy(dst = r(instr.dst), src = r(instr.src))
-                is IrInstr.LoadClass -> instr.copy(dst = r(instr.dst))
-                is IrInstr.Return -> instr.copy(src = r(instr.src))
-                is IrInstr.JumpIfFalse -> instr.copy(src = r(instr.src))
-                is IrInstr.LoadFunc -> instr.copy(dst = r(instr.dst))
-                else -> instr
-            }
-        }
     }
 }

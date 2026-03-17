@@ -4,10 +4,10 @@ import org.lectern.ast.AstLowerer
 import org.lectern.ast.ConstantFolder
 import org.lectern.ast.LivenessAnalyzer
 import org.lectern.ast.RegisterAllocator
+import org.lectern.ast.SpillInserter
 import org.lectern.lang.IrCompiler
 import org.lectern.ssa.SsaBuilder
 import org.lectern.ssa.SsaDeconstructor
-import org.lectern.lang.IrInstr
 import org.lectern.lang.Parser
 import org.lectern.lang.VM
 import org.lectern.lang.Value
@@ -44,8 +44,9 @@ fun main(args: Array<String>) {
 
     val ranges = LivenessAnalyzer().analyze(ssaResult.instrs)
     val allocResult = RegisterAllocator().allocate(ranges)
-    val rewritten = rewrite(ssaResult.instrs, allocResult.allocation)
-    val chunk = IrCompiler().compile(AstLowerer.LoweredResult(rewritten, ssaResult.constants))
+    val resolved = SpillInserter().insert(ssaResult.instrs, allocResult, ranges)
+    val chunk = IrCompiler().compile(AstLowerer.LoweredResult(resolved, ssaResult.constants))
+    chunk.spillSlotCount = allocResult.spillSlotCount
     println("\n=== Bytecode ===")
     chunk.disassemble()
     println("\n=== Execution ===")
@@ -56,31 +57,4 @@ fun main(args: Array<String>) {
         Value.Null
     }
     vm.execute(chunk)
-}
-
-fun rewrite(instrs: List<IrInstr>, allocation: Map<Int, Int>): List<IrInstr> {
-    fun r(reg: Int) = allocation[reg] ?: error("v$reg not allocated — needs spill handling")
-    return instrs.map { instr ->
-        when (instr) {
-            is IrInstr.LoadImm -> instr.copy(dst = r(instr.dst))
-            is IrInstr.LoadGlobal -> instr.copy(dst = r(instr.dst))
-            is IrInstr.StoreGlobal -> instr.copy(src = r(instr.src))
-            is IrInstr.Move -> instr.copy(dst = r(instr.dst), src = r(instr.src))
-            is IrInstr.BinaryOp -> instr.copy(dst = r(instr.dst), src1 = r(instr.src1), src2 = r(instr.src2))
-            is IrInstr.UnaryOp -> instr.copy(dst = r(instr.dst), src = r(instr.src))
-            is IrInstr.Call -> instr.copy(dst = r(instr.dst), func = r(instr.func), args = instr.args.map { r(it) })
-            is IrInstr.NewArray -> instr.copy(dst = r(instr.dst), elements = instr.elements.map { r(it) })
-            is IrInstr.GetIndex -> instr.copy(dst = r(instr.dst), obj = r(instr.obj), index = r(instr.index))
-            is IrInstr.SetIndex -> instr.copy(obj = r(instr.obj), index = r(instr.index), src = r(instr.src))
-            is IrInstr.GetField -> instr.copy(dst = r(instr.dst), obj = r(instr.obj))
-            is IrInstr.SetField -> instr.copy(obj = r(instr.obj), src = r(instr.src))
-            is IrInstr.NewInstance -> instr.copy(dst = r(instr.dst), classReg = r(instr.classReg), args = instr.args.map { r(it) })
-            is IrInstr.IsType -> instr.copy(dst = r(instr.dst), src = r(instr.src))
-            is IrInstr.LoadClass -> instr.copy(dst = r(instr.dst))
-            is IrInstr.Return -> instr.copy(src = r(instr.src))
-            is IrInstr.JumpIfFalse -> instr.copy(src = r(instr.src))
-            is IrInstr.LoadFunc -> instr.copy(dst = r(instr.dst))
-            else -> instr
-        }
-    }
 }
