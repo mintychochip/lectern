@@ -11,6 +11,7 @@ class AstLowerer {
     private val locals = mutableMapOf<String, Int>()
     private var breakLabel: IrLabel? = null
     private var nextLabel: IrLabel? = null
+    private var lambdaCounter = 0
 
     private fun freshReg(): Int = regCounter++
     private fun freshLabel(): IrLabel = IrLabel(labelCounter++)
@@ -47,9 +48,62 @@ class AstLowerer {
         Stmt.BreakStmt -> emit(IrInstr.Jump(breakLabel ?: error("break outside loop")))
         Stmt.NextStmt -> emit(IrInstr.Jump(nextLabel ?: error("next outside loop")))
         is Stmt.ClassStmt -> lowerClass(stmt)
-        is Stmt.EnumStmt -> TODO()
-        is Stmt.ImportFromStmt -> TODO()
-        is Stmt.ImportStmt -> TODO()
+        is Stmt.EnumStmt -> {
+            val nsClassReg = freshReg()
+            emit(IrInstr.LoadGlobal(nsClassReg, "EnumNamespace"))
+            val nsReg = freshReg()
+            emit(IrInstr.NewInstance(nsReg, nsClassReg, emptyList()))
+
+            val evClassReg = freshReg()
+            emit(IrInstr.LoadGlobal(evClassReg, "EnumValue"))
+
+            for ((ordinal, valueTok) in stmt.values.withIndex()) {
+                val valReg = freshReg()
+                emit(IrInstr.NewInstance(valReg, evClassReg, emptyList()))
+                val nameReg = freshReg()
+                val nameIdx = addConstant(Value.String(valueTok.lexeme))
+                emit(IrInstr.LoadImm(nameReg, nameIdx))
+                emit(IrInstr.SetField(valReg, "name", nameReg))
+                val ordReg = freshReg()
+                val ordIdx = addConstant(Value.Int(ordinal))
+                emit(IrInstr.LoadImm(ordReg, ordIdx))
+                emit(IrInstr.SetField(valReg, "ordinal", ordReg))
+                emit(IrInstr.SetField(nsReg, valueTok.lexeme, valReg))
+            }
+
+            locals[stmt.name.lexeme] = nsReg
+            emit(IrInstr.StoreGlobal(stmt.name.lexeme, nsReg))
+        }
+        is Stmt.ImportStmt -> {
+            val dst = freshReg()
+            locals[stmt.namespace.lexeme] = dst
+            val markerIdx = addConstant(Value.String("__import__${stmt.namespace.lexeme}"))
+            emit(IrInstr.LoadImm(dst, markerIdx))
+            emit(IrInstr.StoreGlobal(stmt.namespace.lexeme, dst))
+        }
+        is Stmt.ImportFromStmt -> {
+            for (tok in stmt.tokens) {
+                val dst = freshReg()
+                locals[tok.lexeme] = dst
+                val markerIdx = addConstant(Value.String("__import_from__${stmt.namespace.lexeme}__${tok.lexeme}"))
+                emit(IrInstr.LoadImm(dst, markerIdx))
+                emit(IrInstr.StoreGlobal(tok.lexeme, dst))
+            }
+        }
+        is Stmt.ConfigStmt -> {
+            val dst = freshReg()
+            locals[stmt.name.lexeme] = dst
+            val configMarkerIdx = addConstant(Value.String("__config__${stmt.name.lexeme}"))
+            emit(IrInstr.LoadImm(dst, configMarkerIdx))
+            emit(IrInstr.StoreGlobal(stmt.name.lexeme, dst))
+        }
+        is Stmt.TableStmt -> {
+            val dst = freshReg()
+            locals[stmt.name.lexeme] = dst
+            val tableClassIdx = addConstant(Value.String("__table__${stmt.name.lexeme}"))
+            emit(IrInstr.LoadImm(dst, tableClassIdx))
+            emit(IrInstr.StoreGlobal(stmt.name.lexeme, dst))
+        }
     }
 
     private fun lowerVar(stmt: Stmt.VarStmt) {
@@ -372,13 +426,58 @@ class AstLowerer {
             emit(IrInstr.IsType(dst, srcReg, expr.type.lexeme))
             dst
         }
-        is Expr.LambdaExpr -> TODO()
+        is Expr.LambdaExpr -> {
+            val lambdaName = "__lambda_${lambdaCounter++}"
+            val lowerer = AstLowerer()
+            for ((i, param) in expr.params.withIndex()) {
+                lowerer.locals[param.name.lexeme] = i
+            }
+            lowerer.regCounter = expr.params.size
+            val result = lowerer.lower(expr.body.stmts)
+
+            val defaultValues = expr.params.map { param ->
+                param.defaultValue?.let { defaultValue ->
+                    val defaultLowerer = AstLowerer()
+                    val defaultDst = defaultLowerer.freshReg()
+                    defaultLowerer.lowerExpr(defaultValue, defaultDst)
+                    val defaultResult = defaultLowerer.lower(emptyList())
+                    DefaultValueInfo(defaultResult.instrs, defaultResult.constants)
+                }
+            }
+
+            emit(IrInstr.LoadFunc(dst, lambdaName, expr.params.size, result.instrs, result.constants, defaultValues))
+            dst
+        }
         is Expr.ListExpr -> {
             val elementRegs = expr.elements.map { lowerExpr(it, freshReg())}
             emit(NewArray(dst, elementRegs))
             dst
         }
-        is Expr.MapExpr -> TODO()
-        is Expr.TernaryExpr -> TODO()
+        is Expr.MapExpr -> {
+            val mapClassReg = freshReg()
+            emit(IrInstr.LoadGlobal(mapClassReg, "Map"))
+            emit(IrInstr.NewInstance(dst, mapClassReg, emptyList()))
+            for ((key, value) in expr.entries) {
+                val keyReg = lowerExpr(key, freshReg())
+                val valueReg = lowerExpr(value, freshReg())
+                val setMethodReg = freshReg()
+                emit(IrInstr.GetField(setMethodReg, dst, "set"))
+                emit(IrInstr.Call(freshReg(), setMethodReg, listOf(keyReg, valueReg)))
+            }
+            dst
+        }
+        is Expr.TernaryExpr -> {
+            val elseLabel = freshLabel()
+            val endLabel = freshLabel()
+            val condReg = freshReg()
+            lowerExpr(expr.condition, condReg)
+            emit(IrInstr.JumpIfFalse(condReg, elseLabel))
+            lowerExpr(expr.thenBranch, dst)
+            emit(IrInstr.Jump(endLabel))
+            emit(IrInstr.Label(elseLabel))
+            lowerExpr(expr.elseBranch, dst)
+            emit(IrInstr.Label(endLabel))
+            dst
+        }
     }
 }

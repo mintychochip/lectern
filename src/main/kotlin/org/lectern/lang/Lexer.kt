@@ -47,7 +47,10 @@ private class Lexer(val source: String) {
             "class" to TokenType.KW_CLASS,
             "import" to TokenType.KW_IMPORT,
             "from" to TokenType.KW_FROM,
-            "is" to TokenType.KW_IS
+            "is" to TokenType.KW_IS,
+            "table" to TokenType.KW_TABLE,
+            "key" to TokenType.KW_KEY,
+            "config" to TokenType.KW_CONFIG
         )
     }
 
@@ -110,6 +113,7 @@ private class Lexer(val source: String) {
                 '=' -> if (match('=')) addToken(TokenType.EQ_EQ) else addToken(TokenType.ASSIGN)
                 '<' -> if (match('=')) addToken(TokenType.LTE) else addToken(TokenType.LT)
                 '>' -> if (match('=')) addToken(TokenType.GTE) else addToken(TokenType.GT)
+                '?' -> addToken(TokenType.QUESTION)
 
                 ' ', '\r', '\t' -> {}
                 '\n' -> {

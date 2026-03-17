@@ -2,8 +2,27 @@ package org.lectern.lang
 
 import org.lectern.lang.Value.*
 
+fun valueToString(v: Value): String = when (v) {
+    is Value.Instance -> {
+        val items = v.fields["__items"]
+        val entries = v.fields["__entries"]
+        when {
+            items is Value.InternalList -> items.toString()
+            entries is Value.InternalMap -> entries.toString()
+            v.fields.containsKey("name") && v.clazz.name == "EnumValue" -> v.fields["name"].toString()
+            else -> v.toString()
+        }
+    }
+    else -> v.toString()
+}
+
 class VM {
-    val globals = mutableMapOf<String, Value>()
+    val globals = mutableMapOf<String, Value>(
+        "Array" to Value.Class(Builtins.ArrayClass),
+        "Map" to Value.Class(Builtins.MapClass),
+        "EnumValue" to Value.Class(Builtins.EnumValueClass),
+        "EnumNamespace" to Value.Class(Builtins.EnumNamespaceClass),
+    )
 
     data class CallFrame(
         val chunk: Chunk,
@@ -164,7 +183,7 @@ class VM {
                     val elements = (0 until count).map { i ->
                         frame.argBuffer.removeFirstOrNull() ?: error("Missing array element $i in arg buffer")
                     }
-                    frame.regs[dst] = Value.List(elements.toMutableList())
+                    frame.regs[dst] = Builtins.newArray(elements.toMutableList())
                 }
                 OpCode.GET_FIELD -> {
                     val obj = frame.regs[src1] ?: error("Cannot get field on null")
@@ -184,6 +203,9 @@ class VM {
                 OpCode.SET_FIELD -> {
                     val obj = frame.regs[src1] as? Value.Instance
                         ?: error("Cannot set field on non-instance")
+                    if (obj.clazz.readOnly) {
+                        error("Cannot modify read-only ${obj.clazz.name} field")
+                    }
                     val fieldName = frame.chunk.strings[imm]
                     obj.fields[fieldName] = frame.regs[src2] ?: Value.Null
                 }
@@ -226,7 +248,6 @@ class VM {
                         is Value.Double -> typeName == "double"
                         is Value.String -> typeName == "string"
                         is Value.Boolean -> typeName == "bool"
-                        is Value.List -> typeName == "list"
                         is Value.Instance -> isInTypeChain(value.clazz, typeName)
                         is Value.Class -> value.descriptor.name == typeName
                         else -> false
@@ -254,20 +275,34 @@ class VM {
                     frame.regs[dst] = Builtins.newRange(start, end)
                 }
                 OpCode.GET_INDEX -> {
-                    val list = frame.regs[src1] as? Value.List
-                        ?: error("Cannot index non-list: ${frame.regs[src1]}")
-                    val idx = (frame.regs[src2] as? Value.Int)?.value
-                        ?: error("Index must be an integer: ${frame.regs[src2]}")
-                    frame.regs[dst] = list.value.getOrElse(idx) { Value.Null }
+                    val obj = frame.regs[src1]!!
+                    when (obj) {
+                        is Value.Instance -> {
+                            val getMethod = lookupMethod(obj, "get")
+                                ?: error("Instance has no 'get' method for indexing")
+                            val index = frame.regs[src2]!!
+                            when (getMethod) {
+                                is Value.NativeFunction -> frame.regs[dst] = getMethod.fn(listOf(obj, index))
+                                else -> error("get method is not a native function")
+                            }
+                        }
+                        else -> error("Cannot index: ${obj::class.simpleName}")
+                    }
                 }
                 OpCode.SET_INDEX -> {
-                    val list = frame.regs[src1] as? Value.List
-                        ?: error("Cannot index non-list: ${frame.regs[src1]}")
-                    val idx = (frame.regs[src2] as? Value.Int)?.value
-                        ?: error("Index must be an integer: ${frame.regs[src2]}")
-                    val value = frame.regs[imm] ?: Value.Null
-                    if (idx >= 0 && idx < list.value.size) {
-                        list.value[idx] = value
+                    val obj = frame.regs[src1]!!
+                    when (obj) {
+                        is Value.Instance -> {
+                            val setMethod = lookupMethod(obj, "set")
+                                ?: error("Instance has no 'set' method for indexing")
+                            val index = frame.regs[src2]!!
+                            val value = frame.regs[imm] ?: Value.Null
+                            when (setMethod) {
+                                is Value.NativeFunction -> setMethod.fn(listOf(obj, index, value))
+                                else -> error("set method is not a native function")
+                            }
+                        }
+                        else -> error("Cannot index: ${obj::class.simpleName}")
                     }
                 }
             }

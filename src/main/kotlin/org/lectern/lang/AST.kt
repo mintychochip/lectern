@@ -37,9 +37,7 @@ sealed class Expr {
         init { require(elements.isNotEmpty()) { "List literal must have at least one element." } }
     }
 
-    data class MapExpr(val entries: List<Pair<Expr, Expr>>) : Expr() {
-        init { require(entries.isNotEmpty()) { "Map literal must have at least one entry." } }
-    }
+    data class MapExpr(val entries: List<Pair<Expr, Expr>>) : Expr()
 
     data class VariableExpr(val name: Token) : Expr()
 
@@ -113,5 +111,10 @@ sealed class Stmt {
         data class ElseIf(val stmt: IfStmt) : ElseBranch()
     }
 
-    data class ConfigStmt(val name: Token, val body: List<VarStmt>) : Stmt()
+    data class ConfigField(val name: Token, val type: Token, val defaultValue: Expr?)
+    data class ConfigStmt(val name: Token, val fields: List<ConfigField>) : Stmt()
+
+    data class TableField(val name: Token, val type: Token, val isKey: Boolean, val defaultValue: Expr?)
+    data class TableStmt(val name: Token, val fields: List<TableField>) : Stmt()
+
 }

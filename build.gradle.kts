@@ -3,11 +3,11 @@ plugins {
     application
 }
 
-group = "org.aincraft"
+group = "org.lectern"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("org.aincraft.MainKt")
+    mainClass.set("org.lectern.MainKt")
 }
 
 repositories {
@@ -18,6 +18,8 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    implementation("org.xerial:sqlite-jdbc:3.45.1.0")
+    implementation("org.yaml:snakeyaml:2.2")
 }
 
 kotlin {

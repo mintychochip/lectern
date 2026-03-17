@@ -9,6 +9,7 @@ class Parser(private val tokens: List<Token>) {
             TokenType.ASSIGN to 10,
             TokenType.ADD_EQUALS to 10, TokenType.SUB_EQUALS to 10,
             TokenType.MUL_EQUALS to 10, TokenType.DIV_EQUALS to 10, TokenType.MOD_EQUALS to 10,
+            TokenType.QUESTION to 15,
             TokenType.KW_OR to 20,
             TokenType.KW_AND to 30,
             TokenType.KW_IS to 35,  // type checking, lower than and/or
@@ -36,6 +37,41 @@ class Parser(private val tokens: List<Token>) {
         return stmts
     }
 
+    private fun parseTable(): Stmt {
+        consume(TokenType.KW_TABLE, "Expected 'table'")
+        val name = consume(TokenType.IDENTIFIER, "Expected table name")
+        consume(TokenType.L_BRACE, "Expected '{'")
+        val fields = mutableListOf<Stmt.TableField>()
+        while (!check(TokenType.R_BRACE) && !isAtEnd()) {
+            val isKey = match(TokenType.KW_KEY)
+            val fieldName = consume(TokenType.IDENTIFIER, "Expected field name")
+            consume(TokenType.COLON, "Expected ':' after field name")
+            val fieldType = parseType()
+            val defaultValue = if (match(TokenType.ASSIGN)) parseExpression(0) else null
+            if (check(TokenType.SEMICOLON)) advance()
+            fields.add(Stmt.TableField(fieldName, fieldType, isKey, defaultValue))
+        }
+        consume(TokenType.R_BRACE, "Expected '}'")
+        return Stmt.TableStmt(name, fields)
+    }
+
+    private fun parseConfig(): Stmt {
+        consume(TokenType.KW_CONFIG, "Expected 'config'")
+        val name = consume(TokenType.IDENTIFIER, "Expected config name")
+        consume(TokenType.L_BRACE, "Expected '{'")
+        val fields = mutableListOf<Stmt.ConfigField>()
+        while (!check(TokenType.R_BRACE) && !isAtEnd()) {
+            val fieldName = consume(TokenType.IDENTIFIER, "Expected field name")
+            consume(TokenType.COLON, "Expected ':' after field name")
+            val fieldType = parseType()
+            val defaultValue = if (match(TokenType.ASSIGN)) parseExpression(0) else null
+            if (check(TokenType.SEMICOLON)) advance()
+            fields.add(Stmt.ConfigField(fieldName, fieldType, defaultValue))
+        }
+        consume(TokenType.R_BRACE, "Expected '}'")
+        return Stmt.ConfigStmt(name, fields)
+    }
+
     private fun parseStmt(): Stmt {
         return when {
             check(TokenType.KW_IMPORT) -> parseImport()
@@ -55,6 +91,8 @@ class Parser(private val tokens: List<Token>) {
             check(TokenType.KW_WHILE) -> parseWhile()
             check(TokenType.KW_FOR) -> parseFor()
             check(TokenType.KW_ENUM) -> parseEnum()
+            check(TokenType.KW_TABLE) -> parseTable()
+            check(TokenType.KW_CONFIG) -> parseConfig()
             else -> {
                 val expr = parseExpression(0)
                 if (check(TokenType.SEMICOLON)) advance()
@@ -243,6 +281,16 @@ class Parser(private val tokens: List<Token>) {
                 continue
             }
 
+            // Ternary: condition ? then : else
+            if (token.type == TokenType.QUESTION) {
+                advance()  // consume ?
+                val thenBranch = parseExpression(0)
+                consume(TokenType.COLON, "Expected ':' in ternary expression")
+                val elseBranch = parseExpression(0)
+                left = Expr.TernaryExpr(left, thenBranch, elseBranch)
+                continue
+            }
+
             advance()
             val right = parseExpression(precedence + 1)
             left = Expr.BinaryExpr(left, token, right)
@@ -315,10 +363,45 @@ class Parser(private val tokens: List<Token>) {
             TokenType.MINUS -> Expr.UnaryExpr(token, parseExpression(90))
             TokenType.BANG -> Expr.UnaryExpr(token, parseExpression(90))
             TokenType.KW_NOT -> Expr.UnaryExpr(token, parseExpression(90))
+            TokenType.L_BRACE -> {
+                // Map literal in expression position: { key: value, ... }
+                val entries = mutableListOf<Pair<Expr, Expr>>()
+                if (!check(TokenType.R_BRACE)) {
+                    do {
+                        val key = parseExpression(0)
+                        consume(TokenType.COLON, "Expected ':' after map key")
+                        val value = parseExpression(0)
+                        entries.add(key to value)
+                    } while (match(TokenType.COMMA))
+                }
+                consume(TokenType.R_BRACE, "Expected '}' after map literal")
+                Expr.MapExpr(entries)
+            }
             TokenType.L_PAREN -> {
-                val expr = parseExpression(0)
-                consume(TokenType.R_PAREN, "Expect ')' after expression.")
-                Expr.GroupExpr(expr)
+                // Could be grouped expression or lambda: (params) -> { body }
+                if (isLambdaAhead()) {
+                    val params = mutableListOf<Param>()
+                    if (!check(TokenType.R_PAREN)) {
+                        do {
+                            val paramName = consume(TokenType.IDENTIFIER, "Expected parameter name")
+                            val paramType = if (match(TokenType.COLON)) {
+                                consume(TokenType.IDENTIFIER, "Expected type")
+                            } else null
+                            val defaultValue = if (match(TokenType.ASSIGN)) {
+                                parseExpression(0)
+                            } else null
+                            params.add(Param(paramName, paramType, defaultValue))
+                        } while (match(TokenType.COMMA))
+                    }
+                    consume(TokenType.R_PAREN, "Expected ')'")
+                    consume(TokenType.ARROW, "Expected '->' after lambda params")
+                    val body = parseBlock()
+                    Expr.LambdaExpr(params, body)
+                } else {
+                    val expr = parseExpression(0)
+                    consume(TokenType.R_PAREN, "Expect ')' after expression.")
+                    Expr.GroupExpr(expr)
+                }
             }
             TokenType.L_SQUARE -> {
                 val elements = mutableListOf<Expr>()
@@ -387,6 +470,24 @@ class Parser(private val tokens: List<Token>) {
     }
 
     // --- Helpers ---
+
+    /** Lookahead to check if current L_PAREN starts a lambda: (params) -> { ... } */
+    private fun isLambdaAhead(): Boolean {
+        // We're just past L_PAREN. Scan for matching R_PAREN, then check for ARROW.
+        var depth = 1
+        var i = cursor
+        while (i < tokens.size && depth > 0) {
+            when (tokens[i].type) {
+                TokenType.L_PAREN -> depth++
+                TokenType.R_PAREN -> depth--
+                TokenType.EOF -> return false
+                else -> {}
+            }
+            i++
+        }
+        // i is now past R_PAREN. Check if next token is ARROW.
+        return i < tokens.size && tokens[i].type == TokenType.ARROW
+    }
 
     private fun checkAhead(offset: Int, type: TokenType): Boolean {
         val idx = cursor + offset

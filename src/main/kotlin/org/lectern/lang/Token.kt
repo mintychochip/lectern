@@ -29,6 +29,9 @@ enum class TokenType {
     KW_IMPORT,
     KW_FROM,
     KW_IS,
+    KW_TABLE,
+    KW_KEY,
+    KW_CONFIG,
     IDENTIFIER,
     PLUS,
     MINUS,
@@ -63,6 +66,7 @@ enum class TokenType {
     DOT_DOT,
     COLON,
     SEMICOLON,
+    QUESTION,             // ? (ternary operator)
     INTERPOLATION_START,  // ${
     INTERPOLATION_END,    // } (closing interpolation)
     DOLLAR,               // $ (for error reporting if not followed by {)
