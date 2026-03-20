@@ -6,6 +6,14 @@ data class Semver(
     val patch: Int
 ) : Comparable<Semver> {
 
+    companion object {
+        fun parse(s: String): Semver {
+            val parts = s.split(".")
+            require(parts.size == 3) { "Invalid semver: $s" }
+            return Semver(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
+        }
+    }
+
     override fun compareTo(other: Semver): Int {
         return when {
             major != other.major -> major - other.major

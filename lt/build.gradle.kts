@@ -22,6 +22,9 @@ dependencies {
     // Quills's standard library
     implementation(project(":"))
 
+    // TOML parsing
+    implementation("com.moandjiezana.toml:toml4j:0.7.2")
+
     // Tar.gz extraction
     implementation("org.apache.commons:commons-compress:1.26.0")
 
