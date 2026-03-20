@@ -2,6 +2,7 @@ package org.quill.lang
 
 import org.quill.QuillContext
 import org.quill.lang.Value.*
+import org.quill.lang.getStringMethod
 
 fun valueToString(v: Value): String = when (v) {
     is Value.Instance -> {
@@ -217,6 +218,8 @@ class VM(val context: QuillContext? = null) {
                     val obj = frame.regs[src1] ?: error("Cannot get field on null")
                     val fieldName = frame.chunk.strings[imm]
                     frame.regs[dst] = when (obj) {
+                        is Value.String -> getStringMethod(obj, fieldName)
+                            ?: error("String has no method '$fieldName'")
                         is Value.Instance -> {
                             // Check fields first
                             obj.fields[fieldName]?.let { it }
