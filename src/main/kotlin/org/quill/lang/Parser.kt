@@ -34,6 +34,7 @@ class Parser(private val tokens: List<Token>) {
             TokenType.KW_AND to 30,
             TokenType.KW_IS to 35,  // type checking, lower than and/or
             TokenType.EQ_EQ to 40, TokenType.BANG_EQ to 40,
+            TokenType.KW_HAS to 45,   // new — tighter than < > <= >=, looser than . (90)
             TokenType.LT to 50, TokenType.GT to 50, TokenType.LTE to 50, TokenType.GTE to 50,
             TokenType.DOT_DOT to 55,
             TokenType.PLUS to 60, TokenType.MINUS to 60,
@@ -298,6 +299,14 @@ class Parser(private val tokens: List<Token>) {
                 advance()
                 val typeName = parseType()
                 left = Expr.IsExpr(left, typeName)
+                continue
+            }
+
+            // 'has' takes a field name expression (right-hand side)
+            if (token.type == TokenType.KW_HAS) {   // new
+                advance()
+                val field = parseExpression(45)
+                left = Expr.HasExpr(left, field)
                 continue
             }
 

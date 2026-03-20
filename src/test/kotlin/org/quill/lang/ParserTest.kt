@@ -1363,6 +1363,32 @@ class ParserTest {
     }
 
     // -------------------------------------------------------------------------
+    // has expression
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun testHasExpression() {
+        val tokens = tokenize("obj has \"field\"")
+        val stmts = Parser(tokens).parse()
+        assertEquals(1, stmts.size)
+        val expr = (stmts[0] as Stmt.ExprStmt).expr
+        assertTrue(expr is Expr.HasExpr, "Expected HasExpr")
+        val hasExpr = expr as Expr.HasExpr
+        assertTrue(hasExpr.target is Expr.VariableExpr)
+        assertTrue(hasExpr.field is Expr.LiteralExpr)
+    }
+
+    @Test
+    fun testHasPrecedence() {
+        // obj has "field" == true  parses as  (obj has "field") == true
+        val tokens = tokenize("obj has \"field\" == true")
+        val stmts = Parser(tokens).parse()
+        val expr = (stmts[0] as Stmt.ExprStmt).expr
+        assertTrue(expr is Expr.BinaryExpr, "Expected BinaryExpr at top level")
+        assertEquals(TokenType.EQ_EQ, (expr as Expr.BinaryExpr).op.type)
+    }
+
+    // -------------------------------------------------------------------------
     // Additional: grouped expression
     // -------------------------------------------------------------------------
 
