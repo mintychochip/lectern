@@ -41,6 +41,9 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Worktrees ###
+.worktrees/
+
 ### Mac OS ###
 .DS_Store
 .claude
