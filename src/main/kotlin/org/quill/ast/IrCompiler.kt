@@ -6,11 +6,16 @@ import org.quill.ast.RegisterAllocator
 import org.quill.ast.SpillInserter
 import org.quill.opt.OptimizationPipeline
 import org.quill.opt.passes.ConstantFoldingPass
+import org.quill.opt.passes.CopyPropagationPass
 import org.quill.opt.passes.DeadCodeEliminationPass
+import org.quill.opt.passes.LoopInvariantCodeMotionPass
+import org.quill.opt.passes.StrengthReductionPass
+import org.quill.opt.passes.BranchOptimizationPass
 import org.quill.ssa.SsaBuilder
 import org.quill.ssa.SsaDeconstructor
 import org.quill.ssa.passes.SsaConstantPropagationPass
 import org.quill.ssa.passes.SsaDeadCodeEliminationPass
+import org.quill.ssa.passes.SsaGlobalValueNumberingPass
 
 class IrCompiler {
     companion object {
@@ -22,12 +27,18 @@ class IrCompiler {
             constants,
             ssaPasses = listOf(
                 SsaConstantPropagationPass(),
+                SsaGlobalValueNumberingPass(),
                 SsaDeadCodeEliminationPass()
             ),
             preSsaPasses = listOf(
                 ConstantFoldingPass()
             ),
             postSsaPasses = listOf(
+                DeadCodeEliminationPass(),
+                CopyPropagationPass(),
+                StrengthReductionPass(),
+                LoopInvariantCodeMotionPass(),
+                BranchOptimizationPass(),
                 DeadCodeEliminationPass()
             )
         )
@@ -154,6 +165,7 @@ class IrCompiler {
                     chunk.write(OpCode.NEW_INSTANCE, dst = instr.dst, src1 = instr.classReg, imm = instr.args.size)
                 }
                 is IrInstr.IsType -> chunk.write(OpCode.IS_TYPE, dst = instr.dst, src1 = instr.src, imm = chunk.addString(instr.typeName))
+                is IrInstr.HasCheck -> error("HasCheck not yet implemented")
                 is IrInstr.LoadClass -> {
                     // Compile each method as a nested function chunk
                     val methodFuncIndices = mutableMapOf<String, Int>()

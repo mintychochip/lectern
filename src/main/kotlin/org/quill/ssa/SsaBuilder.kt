@@ -227,6 +227,7 @@ class SsaBuilder(
         is IrInstr.IsType -> SsaInstr.IsType(
             SsaValue(instr.dst, 0), SsaValue(instr.src, 0), instr.typeName
         )
+        is IrInstr.HasCheck -> error("HasCheck not yet implemented")
         is IrInstr.LoadClass -> SsaInstr.LoadClass(
             SsaValue(instr.dst, 0), instr.name, instr.superClass, instr.methods
         )
@@ -252,6 +253,7 @@ class SsaBuilder(
         is IrInstr.GetField -> instr.dst
         is IrInstr.NewInstance -> instr.dst
         is IrInstr.IsType -> instr.dst
+        is IrInstr.HasCheck -> instr.dst
         is IrInstr.LoadClass -> instr.dst
         else -> null
     }
@@ -274,6 +276,7 @@ class SsaBuilder(
         is IrInstr.SetField -> listOf(instr.obj, instr.src)
         is IrInstr.NewInstance -> listOf(instr.classReg) + instr.args
         is IrInstr.IsType -> listOf(instr.src)
+        is IrInstr.HasCheck -> listOf(instr.obj)
         else -> emptyList()
     }
 

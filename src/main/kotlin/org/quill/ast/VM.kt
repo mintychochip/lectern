@@ -261,6 +261,7 @@ class VM {
                     }
                     frame.regs[dst] = if (result) Value.Boolean.TRUE else Value.Boolean.FALSE
                 }
+                OpCode.HAS -> error("HAS not yet implemented")
                 OpCode.BUILD_CLASS -> {
                     val classInfo = frame.chunk.classes[imm]
                     // Resolve superclass from globals if specified

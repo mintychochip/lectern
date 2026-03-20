@@ -102,6 +102,10 @@ class LivenessAnalyzer {
                     define(instr.dst, idx)
                     use(instr.src, idx)
                 }
+                is IrInstr.HasCheck -> {
+                    define(instr.dst, idx)
+                    use(instr.obj, idx)
+                }
                 is IrInstr.LoadClass -> define(instr.dst, idx)
                 is IrInstr.Spill   -> use(instr.src, idx)
                 is IrInstr.Unspill -> define(instr.dst, idx)

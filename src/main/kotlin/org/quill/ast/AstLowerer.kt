@@ -487,6 +487,7 @@ class AstLowerer {
             emit(IrInstr.IsType(dst, srcReg, expr.type.lexeme))
             dst
         }
+        is Expr.HasExpr -> error("HasExpr not yet implemented")
         is Expr.LambdaExpr -> {
             val lambdaName = "__lambda_${lambdaCounter++}"
             val lowerer = AstLowerer()

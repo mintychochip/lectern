@@ -103,6 +103,7 @@ class SpillInserter {
                     dst      = resolveDst(instr.dst)
                 )
                 is IrInstr.IsType      -> instr.copy(src = resolveSrc(instr.src), dst = resolveDst(instr.dst))
+                is IrInstr.HasCheck     -> instr.copy(obj = resolveSrc(instr.obj), dst = resolveDst(instr.dst))
                 is IrInstr.LoadClass   -> instr.copy(dst = resolveDst(instr.dst))
                 is IrInstr.Return      -> instr.copy(src = resolveSrc(instr.src))
                 is IrInstr.JumpIfFalse -> instr.copy(src = resolveSrc(instr.src))
