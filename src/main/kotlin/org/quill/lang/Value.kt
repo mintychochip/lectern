@@ -65,6 +65,16 @@ sealed class Value {
     data class InternalMap(val entries: MutableMap<Value, Value> = mutableMapOf()) : Value() {
         override fun toString() = entries.entries.joinToString(", ", "{", "}") { "${it.key}: ${it.value}" }
     }
+
+    /** Wrapper for internal MutableSet storage (used by Set class) */
+    data class InternalSet(val entries: MutableSet<Value> = mutableSetOf()) : Value() {
+        override fun toString() = entries.joinToString(", ", "{", "}")
+    }
+
+    /** Wrapper for internal List storage (used by Tuple class) — immutable */
+    data class InternalTuple(val items: List<Value>) : Value() {
+        override fun toString() = items.joinToString(", ", "(", ")")
+    }
 }
 
 object Builtins {
@@ -246,4 +256,144 @@ object Builtins {
         superClass = null,
         methods = emptyMap()
     )
+
+    val SetIteratorClass = ClassDescriptor(
+        name = "SetIterator",
+        superClass = null,
+        methods = mapOf(
+            "hasNext" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val items = (self.fields["__items"] as Value.InternalList).items
+                val current = (self.fields["current"] as Value.Int).value
+                if (current < items.size) Value.Boolean.TRUE else Value.Boolean.FALSE
+            },
+            "next" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val items = (self.fields["__items"] as Value.InternalList).items
+                val current = (self.fields["current"] as Value.Int).value
+                self.fields["current"] = Value.Int(current + 1)
+                items.getOrElse(current) { Value.Null }
+            }
+        )
+    )
+
+    val SetClass = ClassDescriptor(
+        name = "Set",
+        superClass = null,
+        methods = mapOf(
+            "init" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                self.fields["__entries"] = Value.InternalSet()
+                // args[1..] are constructor arguments to add to the set
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                for (i in 1 until args.size) {
+                    entries.add(args[i])
+                }
+                Value.Null
+            },
+            "add" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                entries.add(args[1])
+                Value.Null
+            },
+            "has" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                if (entries.contains(args[1])) Value.Boolean.TRUE else Value.Boolean.FALSE
+            },
+            "remove" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                entries.remove(args[1])
+                Value.Null
+            },
+            "size" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                Value.Int(entries.size)
+            },
+            "clear" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                entries.clear()
+                Value.Null
+            },
+            "delete" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val entries = (self.fields["__entries"] as Value.InternalSet).entries
+                entries.remove(args[1])
+                Value.Null
+            },
+            "iter" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val internalSet = self.fields["__entries"] as Value.InternalSet
+                Value.Instance(
+                    SetIteratorClass,
+                    mutableMapOf(
+                        "__entries" to internalSet,
+                        "__items" to Value.InternalList(internalSet.entries.toMutableList()),
+                        "current" to Value.Int(0)
+                    )
+                )
+            }
+        )
+    )
+
+    fun newSet(entries: MutableSet<Value> = mutableSetOf()): Value.Instance =
+        Value.Instance(
+            SetClass,
+            mutableMapOf("__entries" to Value.InternalSet(entries))
+        )
+
+    val TupleClass = ClassDescriptor(
+        name = "Tuple",
+        superClass = null,
+        methods = mapOf(
+            "init" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                // args[1..] are constructor arguments
+                val items = if (args.size > 1) {
+                    args.subList(1, args.size).toList()
+                } else {
+                    emptyList()
+                }
+                self.fields["__tuple"] = Value.InternalTuple(items)
+                Value.Null
+            },
+            "size" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val items = (self.fields["__tuple"] as Value.InternalTuple).items
+                Value.Int(items.size)
+            },
+            "get" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val items = (self.fields["__tuple"] as Value.InternalTuple).items
+                val idx = (args[1] as Value.Int).value
+                items.getOrElse(idx) { Value.Null }
+            },
+            "has" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val items = (self.fields["__tuple"] as Value.InternalTuple).items
+                if (items.contains(args[1])) Value.Boolean.TRUE else Value.Boolean.FALSE
+            },
+            "iter" to Value.NativeFunction { args ->
+                val self = args[0] as Value.Instance
+                val internalTuple = self.fields["__tuple"] as Value.InternalTuple
+                Value.Instance(
+                    ArrayIteratorClass,
+                    mutableMapOf(
+                        "__items" to Value.InternalList(internalTuple.items.toMutableList()),
+                        "current" to Value.Int(0)
+                    )
+                )
+            }
+        )
+    )
+
+    fun newTuple(items: List<Value>): Value.Instance =
+        Value.Instance(
+            TupleClass,
+            mutableMapOf("__tuple" to Value.InternalTuple(items))
+        )
 }

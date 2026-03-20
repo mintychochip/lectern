@@ -37,6 +37,10 @@ sealed class Expr {
         init { require(elements.isNotEmpty()) { "List literal must have at least one element." } }
     }
 
+    data class SetExpr(val elements: List<Expr>) : Expr()
+
+    data class TupleExpr(val elements: List<Expr>) : Expr()
+
     data class MapExpr(val entries: List<Pair<Expr, Expr>>) : Expr()
 
     data class VariableExpr(val name: Token) : Expr()

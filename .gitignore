@@ -48,3 +48,4 @@ bin/
 .DS_Store
 .claude
 CLAUDE.md
+.worktrees/

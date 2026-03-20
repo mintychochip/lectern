@@ -6,9 +6,12 @@ fun valueToString(v: Value): String = when (v) {
     is Value.Instance -> {
         val items = v.fields["__items"]
         val entries = v.fields["__entries"]
+        val tuple = v.fields["__tuple"]
         when {
             items is Value.InternalList -> items.toString()
             entries is Value.InternalMap -> entries.toString()
+            entries is Value.InternalSet -> entries.toString()
+            tuple is Value.InternalTuple -> tuple.toString()
             v.fields.containsKey("name") && v.clazz.name == "EnumValue" -> v.fields["name"].toString()
             else -> v.toString()
         }
@@ -20,6 +23,8 @@ class VM {
     val globals = mutableMapOf<String, Value>(
         "Array" to Value.Class(Builtins.ArrayClass),
         "Map" to Value.Class(Builtins.MapClass),
+        "Set" to Value.Class(Builtins.SetClass),
+        "Tuple" to Value.Class(Builtins.TupleClass),
         "EnumValue" to Value.Class(Builtins.EnumValueClass),
         "EnumNamespace" to Value.Class(Builtins.EnumNamespaceClass),
         "print" to Value.NativeFunction { args ->

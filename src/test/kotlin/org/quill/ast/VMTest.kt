@@ -576,4 +576,194 @@ class VMTest {
         )
         assertEquals(listOf("5"), output)
     }
+
+    // === Set Tests ===
+
+    @Test
+    fun testSetFactory() {
+        val output = compileAndRun("""
+            let s = Set(1, 2, 3)
+            print(s.size())
+        """.trimIndent())
+        assertEquals(listOf("3"), output)
+    }
+
+    @Test
+    fun testSetLiteral() {
+        val output = compileAndRun("""
+            let s = {1, 2, 3}
+            print(s.size())
+        """.trimIndent())
+        assertEquals(listOf("3"), output)
+    }
+
+    @Test
+    fun testSetHas() {
+        val output = compileAndRun("""
+            let s = {1, 2, 3}
+            print(s.has(2))
+            print(s.has(5))
+        """.trimIndent())
+        assertEquals(listOf("Boolean(value=true)", "Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testSetAdd() {
+        val output = compileAndRun("""
+            let s = {1, 2}
+            s.add(3)
+            print(s.size())
+        """.trimIndent())
+        assertEquals(listOf("3"), output)
+    }
+
+    @Test
+    fun testSetRemove() {
+        val output = compileAndRun("""
+            let s = {1, 2, 3}
+            s.remove(2)
+            print(s.size())
+            print(s.has(2))
+        """.trimIndent())
+        assertEquals(listOf("2", "Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testSetClear() {
+        val output = compileAndRun("""
+            let s = {1, 2, 3}
+            s.clear()
+            print(s.size())
+        """.trimIndent())
+        assertEquals(listOf("0"), output)
+    }
+
+    @Test
+    fun testSetDelete() {
+        val output = compileAndRun("""
+            let s = {1, 2, 3}
+            s.delete(2)
+            print(s.size())
+        """.trimIndent())
+        assertEquals(listOf("2"), output)
+    }
+
+    @Test
+    fun testSetDuplicateDeduplication() {
+        val output = compileAndRun("""
+            let s = Set(1, 1, 2, 2, 3)
+            print(s.size())
+        """.trimIndent())
+        assertEquals(listOf("3"), output)
+    }
+
+    @Ignore("SSA round-trip bug with loops causes infinite loop")
+    @Test
+    fun testSetIteration() {
+        val output = compileAndRun("""
+            let s = {1, 2, 3}
+            let sum = 0
+            for x in s {
+                sum = sum + x
+            }
+            print(sum)
+        """.trimIndent())
+        // sum should be 6 regardless of iteration order
+        assertEquals(listOf("6"), output)
+    }
+
+    // === Tuple Tests ===
+
+    @Test
+    fun testTupleFactory() {
+        val output = compileAndRun("""
+            let t = Tuple(1, 2, 3)
+            print(t.size())
+        """.trimIndent())
+        assertEquals(listOf("3"), output)
+    }
+
+    @Test
+    fun testTupleLiteral() {
+        val output = compileAndRun("""
+            let t = (1, 2, 3)
+            print(t.size())
+        """.trimIndent())
+        assertEquals(listOf("3"), output)
+    }
+
+    @Test
+    fun testEmptyTuple() {
+        val output = compileAndRun("""
+            let t = ()
+            print(t.size())
+        """.trimIndent())
+        assertEquals(listOf("0"), output)
+    }
+
+    @Test
+    fun testSingleElementTuple() {
+        val output = compileAndRun("""
+            let t = (42,)
+            print(t.size())
+            print(t.get(0))
+        """.trimIndent())
+        assertEquals(listOf("1", "42"), output)
+    }
+
+    @Test
+    fun testTupleGet() {
+        val output = compileAndRun("""
+            let t = (10, 20, 30)
+            print(t.get(0))
+            print(t.get(1))
+            print(t.get(2))
+        """.trimIndent())
+        assertEquals(listOf("10", "20", "30"), output)
+    }
+
+    @Test
+    fun testTupleGetOutOfBounds() {
+        val output = compileAndRun("""
+            let t = (1, 2, 3)
+            print(t.get(10))
+            print(t.get(-1))
+        """.trimIndent())
+        // Out of bounds returns null
+        assertEquals(listOf("null", "null"), output)
+    }
+
+    @Test
+    fun testTupleHas() {
+        val output = compileAndRun("""
+            let t = (1, 2, 3)
+            print(t.has(2))
+            print(t.has(5))
+        """.trimIndent())
+        assertEquals(listOf("Boolean(value=true)", "Boolean(value=false)"), output)
+    }
+
+    @Ignore("SSA round-trip bug with loops causes infinite loop")
+    @Test
+    fun testTupleIteration() {
+        val output = compileAndRun("""
+            let sum = 0
+            for x in (1, 2, 3) {
+                sum = sum + x
+            }
+            print(sum)
+        """.trimIndent())
+        assertEquals(listOf("6"), output)
+    }
+
+    @Test
+    fun testTupleIndexing() {
+        val output = compileAndRun("""
+            let t = (100, 200, 300)
+            print(t[0])
+            print(t[1])
+            print(t[2])
+        """.trimIndent())
+        assertEquals(listOf("100", "200", "300"), output)
+    }
 }

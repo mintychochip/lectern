@@ -395,21 +395,42 @@ class Parser(private val tokens: List<Token>) {
             TokenType.INCREMENT -> Expr.UnaryExpr(token, parseExpression(90))
             TokenType.DECREMENT -> Expr.UnaryExpr(token, parseExpression(90))
             TokenType.L_BRACE -> {
-                // Map literal in expression position: { key: value, ... }
-                val entries = mutableListOf<Pair<Expr, Expr>>()
-                if (!check(TokenType.R_BRACE)) {
-                    do {
+                // Map literal or set literal in expression position
+                // { key: value, ... } → Map
+                // { expr, expr, ... } → Set
+                // Empty {} is an error in expression position (parsed as block at statement level)
+                if (check(TokenType.R_BRACE)) {
+                    // Empty {} - error since we can't have empty set/map in expression position
+                    throw error(token, "Empty '{}' is not valid in expression position. Use '()' for empty tuple or '{key: value}' for single-element map.")
+                }
+                // Parse first element to determine if this is a map or set
+                val firstExpr = parseExpression(0)
+                if (match(TokenType.COLON)) {
+                    // This is a map: { key: value, ... }
+                    val entries = mutableListOf<Pair<Expr, Expr>>()
+                    entries.add(firstExpr to parseExpression(0))
+                    while (match(TokenType.COMMA)) {
                         val key = parseExpression(0)
                         consume(TokenType.COLON, "Expected ':' after map key")
                         val value = parseExpression(0)
                         entries.add(key to value)
-                    } while (match(TokenType.COMMA))
+                    }
+                    consume(TokenType.R_BRACE, "Expected '}' after map literal")
+                    Expr.MapExpr(entries)
+                } else {
+                    // This is a set: { expr, expr, ... }
+                    val elements = mutableListOf<Expr>()
+                    elements.add(firstExpr)
+                    while (match(TokenType.COMMA)) {
+                        elements.add(parseExpression(0))
+                    }
+                    consume(TokenType.R_BRACE, "Expected '}' after set literal")
+                    Expr.SetExpr(elements)
                 }
-                consume(TokenType.R_BRACE, "Expected '}' after map literal")
-                Expr.MapExpr(entries)
             }
             TokenType.L_PAREN -> {
-                // Could be grouped expression or lambda: (params) -> { body }
+                // Could be: grouped expression, lambda, or tuple
+                // Lambda: (params) -> { body }
                 if (isLambdaAhead()) {
                     val params = mutableListOf<Param>()
                     if (!check(TokenType.R_PAREN)) {
@@ -429,9 +450,32 @@ class Parser(private val tokens: List<Token>) {
                     val body = parseBlock()
                     Expr.LambdaExpr(params, body)
                 } else {
-                    val expr = parseExpression(0)
-                    consume(TokenType.R_PAREN, "Expect ')' after expression.")
-                    Expr.GroupExpr(expr)
+                    // Check if this is a tuple: (expr, expr, ...) or ()
+                    if (check(TokenType.R_PAREN)) {
+                        // Empty tuple: ()
+                        advance()
+                        Expr.TupleExpr(emptyList())
+                    } else {
+                        val firstExpr = parseExpression(0)
+                        if (check(TokenType.COMMA)) {
+                            // This is a tuple: (expr, expr, ...) or (expr,) - single element with trailing comma
+                            val elements = mutableListOf<Expr>()
+                            elements.add(firstExpr)
+                            while (match(TokenType.COMMA)) {
+                                // Check for trailing comma: (expr,) case - next token should be R_PAREN
+                                if (check(TokenType.R_PAREN)) {
+                                    break
+                                }
+                                elements.add(parseExpression(0))
+                            }
+                            consume(TokenType.R_PAREN, "Expected ')' after tuple")
+                            Expr.TupleExpr(elements)
+                        } else {
+                            // Single expression in parentheses - grouping
+                            consume(TokenType.R_PAREN, "Expect ')' after expression.")
+                            Expr.GroupExpr(firstExpr)
+                        }
+                    }
                 }
             }
             TokenType.L_SQUARE -> {

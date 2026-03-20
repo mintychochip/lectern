@@ -524,6 +524,22 @@ class AstLowerer {
             emit(NewArray(dst, elementRegs))
             dst
         }
+        is Expr.SetExpr -> {
+            // Desugar to Set(element1, element2, ...)
+            val elementRegs = expr.elements.map { lowerExpr(it, freshReg()) }
+            val setClassReg = freshReg()
+            emit(IrInstr.LoadGlobal(setClassReg, "Set"))
+            emit(IrInstr.NewInstance(dst, setClassReg, elementRegs))
+            dst
+        }
+        is Expr.TupleExpr -> {
+            // Desugar to Tuple(element1, element2, ...)
+            val elementRegs = expr.elements.map { lowerExpr(it, freshReg()) }
+            val tupleClassReg = freshReg()
+            emit(IrInstr.LoadGlobal(tupleClassReg, "Tuple"))
+            emit(IrInstr.NewInstance(dst, tupleClassReg, elementRegs))
+            dst
+        }
         is Expr.MapExpr -> {
             val mapClassReg = freshReg()
             emit(IrInstr.LoadGlobal(mapClassReg, "Map"))
