@@ -12,7 +12,7 @@
 
 **Test command:** `./gradlew test`
 
-**Test pattern:** End-to-end tests in `src/test/kotlin/org/lectern/ast/VMTest.kt` use the `compileAndRun(source)` helper that returns captured print output as `List<String>`.
+**Test pattern:** End-to-end tests in `src/test/kotlin/org/quill/ast/VMTest.kt` use the `compileAndRun(source)` helper that returns captured print output as `List<String>`.
 
 **Known limitation:** SSA round-trip is broken for control flow (if-else, while loops). Some tests that desugar to control flow (ternary, for loops) may need `@Ignore` or a `compileAndRunNoSsa` helper that skips the SSA pass. See existing `@Ignore` tests in VMTest.kt.
 
@@ -23,7 +23,7 @@
 ### Task 1: Add wrapper Value types and Builtins.ArrayClass
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt:63-110`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt:63-110`
 
 - [ ] **Step 1: Add InternalList and InternalMap wrapper types**
 
@@ -125,7 +125,7 @@ Expected: All existing tests still pass (ArrayClass is defined but not used yet)
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Value.kt
+git add src/main/kotlin/org/quill/lang/Value.kt
 git commit -m "feat: add Builtins.ArrayClass with native methods"
 ```
 
@@ -134,7 +134,7 @@ git commit -m "feat: add Builtins.ArrayClass with native methods"
 ### Task 2: Add Builtins.MapClass
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
 
 - [ ] **Step 1: Write Builtins.MapClass**
 
@@ -190,7 +190,7 @@ fun newMap(entries: MutableMap<Value, Value> = mutableMapOf()): Value.Instance =
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Value.kt
+git add src/main/kotlin/org/quill/lang/Value.kt
 git commit -m "feat: add Builtins.MapClass with native methods"
 ```
 
@@ -199,7 +199,7 @@ git commit -m "feat: add Builtins.MapClass with native methods"
 ### Task 3: Migrate VM from Value.List to Builtins.ArrayClass
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt` (file is at `src/main/kotlin/org/lectern/ast/VM.kt` but package is `org.lectern.lang`)
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt` (file is at `src/main/kotlin/org/quill/ast/VM.kt` but package is `org.quill.lang`)
 
 - [ ] **Step 1: Register built-in classes as globals in VM**
 
@@ -340,12 +340,12 @@ git commit -m "refactor: migrate Value.List/Map to Builtins.ArrayClass/MapClass"
 ### Task 4: Add QUESTION token and ternary lexing
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Token.kt:3-70`
-- Modify: `src/main/kotlin/org/lectern/lang/Lexer.kt:61-112`
+- Modify: `src/main/kotlin/org/quill/lang/Token.kt:3-70`
+- Modify: `src/main/kotlin/org/quill/lang/Lexer.kt:61-112`
 
 - [ ] **Step 1: Write failing test**
 
-In `src/test/kotlin/org/lectern/ast/VMTest.kt`, add:
+In `src/test/kotlin/org/quill/ast/VMTest.kt`, add:
 
 ```kotlin
 @Test
@@ -369,7 +369,7 @@ fun testTernaryWithExpression() {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testTernaryTrue"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testTernaryTrue"`
 Expected: FAIL — lexer doesn't recognize `?`
 
 - [ ] **Step 3: Add QUESTION to TokenType**
@@ -392,7 +392,7 @@ In `Lexer.kt`, add after the `'>' ->` handler (line 112):
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Token.kt src/main/kotlin/org/lectern/lang/Lexer.kt
+git add src/main/kotlin/org/quill/lang/Token.kt src/main/kotlin/org/quill/lang/Lexer.kt
 git commit -m "feat: add QUESTION token for ternary operator"
 ```
 
@@ -401,8 +401,8 @@ git commit -m "feat: add QUESTION token for ternary operator"
 ### Task 5: Parse and lower ternary expressions
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt:218-252`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt:384`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt:218-252`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt:384`
 
 - [ ] **Step 1: Add ternary parsing**
 
@@ -448,7 +448,7 @@ is Expr.TernaryExpr -> {
 
 - [ ] **Step 3: Run ternary tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testTernary*"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testTernary*"`
 Expected: PASS. **If tests fail due to the known SSA round-trip bug with control flow** (ternary desugars to JumpIfFalse/Jump/Label, same pattern as if-else which is `@Ignore`d), add `@Ignore("SSA round-trip bug with control flow")` to the failing tests and proceed. The ternary lowering itself is correct — the SSA bug is a pre-existing issue.
 
 - [ ] **Step 4: Run all tests**
@@ -459,7 +459,7 @@ Expected: All tests pass
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Parser.kt src/main/kotlin/org/lectern/ast/AstLowerer.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/main/kotlin/org/quill/lang/Parser.kt src/main/kotlin/org/quill/ast/AstLowerer.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: implement ternary expressions (condition ? then : else)"
 ```
 
@@ -470,7 +470,7 @@ git commit -m "feat: implement ternary expressions (condition ? then : else)"
 ### Task 6: Parse map literals
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt:280-336`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt:280-336`
 
 - [ ] **Step 1: Write failing test**
 
@@ -499,7 +499,7 @@ fun testMapSize() {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testMapLiteral"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testMapLiteral"`
 Expected: FAIL — parser doesn't handle map syntax
 
 - [ ] **Step 2.5: Remove `isNotEmpty()` constraint from MapExpr**
@@ -534,7 +534,7 @@ TokenType.L_BRACE -> {
 - [ ] **Step 4: Commit parser change**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Parser.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/main/kotlin/org/quill/lang/Parser.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: parse map literal expressions"
 ```
 
@@ -543,7 +543,7 @@ git commit -m "feat: parse map literal expressions"
 ### Task 7: Lower map literals
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt:383`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt:383`
 
 - [ ] **Step 1: Implement map lowering**
 
@@ -570,7 +570,7 @@ is Expr.MapExpr -> {
 
 - [ ] **Step 2: Run map tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testMap*"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testMap*"`
 Expected: PASS
 
 - [ ] **Step 3: Run all tests**
@@ -581,7 +581,7 @@ Expected: All tests pass
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/ast/AstLowerer.kt
+git add src/main/kotlin/org/quill/ast/AstLowerer.kt
 git commit -m "feat: lower map literals to Map class instances"
 ```
 
@@ -590,7 +590,7 @@ git commit -m "feat: lower map literals to Map class instances"
 ### Task 8: Parse lambda expressions
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt:318-322`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt:318-322`
 
 - [ ] **Step 1: Write failing test**
 
@@ -629,7 +629,7 @@ fun testLambdaAsArgument() {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testLambdaBasic"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testLambdaBasic"`
 Expected: FAIL
 
 - [ ] **Step 3: Add lambda parsing**
@@ -694,7 +694,7 @@ private fun isLambdaAhead(): Boolean {
 - [ ] **Step 4: Commit parser change**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Parser.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/main/kotlin/org/quill/lang/Parser.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: parse lambda expressions with (params) -> { body } syntax"
 ```
 
@@ -703,7 +703,7 @@ git commit -m "feat: parse lambda expressions with (params) -> { body } syntax"
 ### Task 9: Lower lambda expressions
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt:377`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt:377`
 
 - [ ] **Step 1: Add lambda counter to AstLowerer**
 
@@ -744,7 +744,7 @@ is Expr.LambdaExpr -> {
 
 - [ ] **Step 3: Run lambda tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testLambda*"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testLambda*"`
 Expected: PASS
 
 - [ ] **Step 4: Run all tests**
@@ -755,7 +755,7 @@ Expected: All tests pass
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/ast/AstLowerer.kt
+git add src/main/kotlin/org/quill/ast/AstLowerer.kt
 git commit -m "feat: lower lambda expressions as anonymous functions"
 ```
 
@@ -766,8 +766,8 @@ git commit -m "feat: lower lambda expressions as anonymous functions"
 ### Task 10: Lower enum statements
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt:50`
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt:50`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
 
 - [ ] **Step 1: Write failing test**
 
@@ -862,13 +862,13 @@ In `VM.kt`, add to the globals map:
 
 - [ ] **Step 5: Run enum tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest.testEnum*"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest.testEnum*"`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Value.kt src/main/kotlin/org/lectern/ast/AstLowerer.kt src/main/kotlin/org/lectern/ast/VM.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/main/kotlin/org/quill/lang/Value.kt src/main/kotlin/org/quill/ast/AstLowerer.kt src/main/kotlin/org/quill/ast/VM.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: implement enum statements with name and ordinal"
 ```
 
@@ -877,8 +877,8 @@ git commit -m "feat: implement enum statements with name and ordinal"
 ### Task 11: Add table and config keywords to lexer
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Token.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Lexer.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Token.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Lexer.kt`
 
 - [ ] **Step 1: Add new token types**
 
@@ -903,7 +903,7 @@ In `Lexer.kt`, add to the `keywords` map (around line 50):
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Token.kt src/main/kotlin/org/lectern/lang/Lexer.kt
+git add src/main/kotlin/org/quill/lang/Token.kt src/main/kotlin/org/quill/lang/Lexer.kt
 git commit -m "feat: add table, key, config keywords to lexer"
 ```
 
@@ -912,8 +912,8 @@ git commit -m "feat: add table, key, config keywords to lexer"
 ### Task 12: Replace RecordStmt with TableStmt in AST
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/AST.kt:92,117`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt:54`
+- Modify: `src/main/kotlin/org/quill/lang/AST.kt:92,117`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt:54`
 
 - [ ] **Step 1: Add TableField and TableStmt, remove RecordStmt**
 
@@ -945,7 +945,7 @@ Fix any remaining references to `RecordStmt` or old `ConfigStmt`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/AST.kt src/main/kotlin/org/lectern/ast/AstLowerer.kt
+git add src/main/kotlin/org/quill/lang/AST.kt src/main/kotlin/org/quill/ast/AstLowerer.kt
 git commit -m "refactor: replace RecordStmt with TableStmt, update ConfigStmt"
 ```
 
@@ -954,7 +954,7 @@ git commit -m "refactor: replace RecordStmt with TableStmt, update ConfigStmt"
 ### Task 13: Parse table statements
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
 
 - [ ] **Step 1: Add parseTable() function**
 
@@ -993,7 +993,7 @@ check(TokenType.KW_TABLE) -> parseTable()
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Parser.kt
+git add src/main/kotlin/org/quill/lang/Parser.kt
 git commit -m "feat: parse table statements"
 ```
 
@@ -1002,7 +1002,7 @@ git commit -m "feat: parse table statements"
 ### Task 14: Parse config statements
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
 
 - [ ] **Step 1: Add parseConfig() function**
 
@@ -1038,7 +1038,7 @@ check(TokenType.KW_CONFIG) -> parseConfig()
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Parser.kt
+git add src/main/kotlin/org/quill/lang/Parser.kt
 git commit -m "feat: parse config statements"
 ```
 
@@ -1050,10 +1050,10 @@ git commit -m "feat: parse config statements"
 
 **Files:**
 - Modify: `build.gradle.kts`
-- Create: `src/main/kotlin/org/lectern/lang/TableRuntime.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
+- Create: `src/main/kotlin/org/quill/lang/TableRuntime.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
 
 - [ ] **Step 1: Add SQLite dependency**
 
@@ -1066,7 +1066,7 @@ implementation("org.xerial:sqlite-jdbc:3.45.1.0")
 - [ ] **Step 2: Create TableRuntime.kt**
 
 ```kotlin
-package org.lectern.lang
+package org.quill.lang
 
 import java.sql.Connection
 import java.sql.DriverManager
@@ -1249,7 +1249,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add build.gradle.kts src/main/kotlin/org/lectern/lang/TableRuntime.kt src/main/kotlin/org/lectern/ast/AstLowerer.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add build.gradle.kts src/main/kotlin/org/quill/lang/TableRuntime.kt src/main/kotlin/org/quill/ast/AstLowerer.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: add table statement parsing and SQLite runtime"
 ```
 
@@ -1259,10 +1259,10 @@ git commit -m "feat: add table statement parsing and SQLite runtime"
 
 **Files:**
 - Modify: `build.gradle.kts`
-- Create: `src/main/kotlin/org/lectern/lang/ConfigRuntime.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
+- Create: `src/main/kotlin/org/quill/lang/ConfigRuntime.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
 
 - [ ] **Step 1: Add SnakeYAML dependency**
 
@@ -1304,7 +1304,7 @@ OpCode.SET_FIELD -> {
 - [ ] **Step 4: Create ConfigRuntime.kt**
 
 ```kotlin
-package org.lectern.lang
+package org.quill.lang
 
 import org.yaml.snakeyaml.Yaml
 import java.io.File
@@ -1411,7 +1411,7 @@ Expected: PASS
 - [ ] **Step 8: Commit**
 
 ```bash
-git add build.gradle.kts src/main/kotlin/org/lectern/lang/ConfigRuntime.kt src/main/kotlin/org/lectern/lang/Value.kt src/main/kotlin/org/lectern/ast/AstLowerer.kt src/main/kotlin/org/lectern/ast/VM.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add build.gradle.kts src/main/kotlin/org/quill/lang/ConfigRuntime.kt src/main/kotlin/org/quill/lang/Value.kt src/main/kotlin/org/quill/ast/AstLowerer.kt src/main/kotlin/org/quill/ast/VM.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: add config statement with YAML loading and read-only enforcement"
 ```
 
@@ -1420,21 +1420,21 @@ git commit -m "feat: add config statement with YAML loading and read-only enforc
 ### Task 17: Implement import lowering
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt:51-52`
-- Create: `src/main/kotlin/org/lectern/lang/ModuleLoader.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt:51-52`
+- Create: `src/main/kotlin/org/quill/lang/ModuleLoader.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
 
 - [ ] **Step 1: Create ModuleLoader.kt**
 
 ```kotlin
-package org.lectern.lang
+package org.quill.lang
 
-import org.lectern.ast.AstLowerer
-import org.lectern.ast.ConstantFolder
-import org.lectern.ast.LivenessAnalyzer
-import org.lectern.ast.RegisterAllocator
-import org.lectern.ssa.SsaBuilder
-import org.lectern.ssa.SsaDeconstructor
+import org.quill.ast.AstLowerer
+import org.quill.ast.ConstantFolder
+import org.quill.ast.LivenessAnalyzer
+import org.quill.ast.RegisterAllocator
+import org.quill.ssa.SsaBuilder
+import org.quill.ssa.SsaDeconstructor
 import java.io.File
 
 object ModuleLoader {
@@ -1442,7 +1442,7 @@ object ModuleLoader {
     private val loading = mutableSetOf<String>()
 
     fun loadModule(moduleName: String, scriptDir: String, parentVM: VM): Map<String, Value> {
-        val filePath = File(scriptDir, "$moduleName.lec").absolutePath
+        val filePath = File(scriptDir, "$moduleName.quill").absolutePath
 
         // Check cache
         cache[filePath]?.let { return it }
@@ -1579,7 +1579,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/ModuleLoader.kt src/main/kotlin/org/lectern/ast/AstLowerer.kt src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/main/kotlin/org/quill/lang/ModuleLoader.kt src/main/kotlin/org/quill/ast/AstLowerer.kt src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "feat: implement import statements with module loading"
 ```
 
@@ -1590,14 +1590,14 @@ git commit -m "feat: implement import statements with module loading"
 ### Task 18: Update SSA and optimization passes for new/changed IR instructions
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaBuilder.kt`
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaInstr.kt`
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaDeconstructor.kt`
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaRenamer.kt`
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaFunction.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
-- Modify: `src/main/kotlin/org/lectern/opt/passes/*.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
+- Modify: `src/main/kotlin/org/quill/ssa/SsaBuilder.kt`
+- Modify: `src/main/kotlin/org/quill/ssa/SsaInstr.kt`
+- Modify: `src/main/kotlin/org/quill/ssa/SsaDeconstructor.kt`
+- Modify: `src/main/kotlin/org/quill/ssa/SsaRenamer.kt`
+- Modify: `src/main/kotlin/org/quill/ssa/SsaFunction.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/opt/passes/*.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
 
 - [ ] **Step 1: Build and identify all compile errors**
 
@@ -1635,7 +1635,7 @@ git commit -m "fix: resolve compile errors from collection refactor and AST chan
 ### Task 19: Final integration test
 
 **Files:**
-- Modify: `src/test/kotlin/org/lectern/ast/VMTest.kt`
+- Modify: `src/test/kotlin/org/quill/ast/VMTest.kt`
 
 - [ ] **Step 1: Write comprehensive integration tests**
 
@@ -1708,7 +1708,7 @@ Expected: All tests pass
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "test: add comprehensive integration tests for new features"
 ```
 

@@ -5,7 +5,7 @@
 
 ## Problem
 
-Lectern's register allocator uses linear scan over 16 physical registers. When more than 16 virtual registers are simultaneously live in a function, the allocator evicts ("spills") some virtuals but never generates save/restore code. The `rewrite()` pass in `Main.kt` throws a hard error if a virtual is unallocated. This means high register-pressure functions either crash at compile time or silently produce wrong code.
+quill's register allocator uses linear scan over 16 physical registers. When more than 16 virtual registers are simultaneously live in a function, the allocator evicts ("spills") some virtuals but never generates save/restore code. The `rewrite()` pass in `Main.kt` throws a hard error if a virtual is unallocated. This means high register-pressure functions either crash at compile time or silently produce wrong code.
 
 ## Goal
 
@@ -176,7 +176,7 @@ AstLowerer
 
 ## Testing
 
-New file: `src/test/kotlin/org/lectern/ast/RegisterSpillTest.kt`
+New file: `src/test/kotlin/org/quill/ast/RegisterSpillTest.kt`
 
 1. **Basic spill** — function with >16 simultaneously live virtuals compiles and produces correct output.
 2. **Spill across a branch** — spilled virtual survives an `if`/`else`, correctly reloaded on both paths.

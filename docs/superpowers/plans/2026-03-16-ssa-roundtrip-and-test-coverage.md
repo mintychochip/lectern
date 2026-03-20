@@ -17,12 +17,12 @@
 ### Task 1: Fix `assignRegisters()` — unique register per SSA version
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaDeconstructor.kt`
-- Test: `src/test/kotlin/org/lectern/ssa/SsaTest.kt` (existing, add test)
+- Modify: `src/main/kotlin/org/quill/ssa/SsaDeconstructor.kt`
+- Test: `src/test/kotlin/org/quill/ssa/SsaTest.kt` (existing, add test)
 
 - [ ] **Step 1: Write failing test for unique register assignment**
 
-Add to `src/test/kotlin/org/lectern/ssa/SsaTest.kt`:
+Add to `src/test/kotlin/org/quill/ssa/SsaTest.kt`:
 
 ```kotlin
 @Test
@@ -63,7 +63,7 @@ fun testSsaDeconstructorUniqueRegisters() {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaTest.testSsaDeconstructorUniqueRegisters"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaTest.testSsaDeconstructorUniqueRegisters"`
 Expected: FAIL — current code assigns all versions of base register 0 to the same physical register
 
 - [ ] **Step 3: Fix `assignRegisters()` in `SsaDeconstructor.kt`**
@@ -100,18 +100,18 @@ private fun assignRegisters() {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaTest.testSsaDeconstructorUniqueRegisters"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaTest.testSsaDeconstructorUniqueRegisters"`
 Expected: PASS
 
 - [ ] **Step 5: Run all existing SSA tests to check for regressions**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaTest"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaTest"`
 Expected: All pass (the simple roundtrip test may need adjustment since register numbers change)
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/ssa/SsaDeconstructor.kt src/test/kotlin/org/lectern/ssa/SsaTest.kt
+git add src/main/kotlin/org/quill/ssa/SsaDeconstructor.kt src/test/kotlin/org/quill/ssa/SsaTest.kt
 git commit -m "fix: assign unique registers per SSA version in SsaDeconstructor"
 ```
 
@@ -120,8 +120,8 @@ git commit -m "fix: assign unique registers per SSA version in SsaDeconstructor"
 ### Task 2: Fix `convertPhis()` — proper predecessor block copy insertion
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ssa/SsaDeconstructor.kt`
-- Test: `src/test/kotlin/org/lectern/ssa/SsaTest.kt`
+- Modify: `src/main/kotlin/org/quill/ssa/SsaDeconstructor.kt`
+- Test: `src/test/kotlin/org/quill/ssa/SsaTest.kt`
 
 - [ ] **Step 1: Write failing test for multi-predecessor phi resolution**
 
@@ -170,7 +170,7 @@ fun testSsaDeconstructorPhiMultiplePredecessors() {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaTest.testSsaDeconstructorPhiMultiplePredecessors"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaTest.testSsaDeconstructorPhiMultiplePredecessors"`
 Expected: FAIL — current code picks first non-undefined operand instead of inserting per-predecessor copies
 
 - [ ] **Step 3: Rewrite `convertPhis()` and restructure `deconstruct()`**
@@ -250,7 +250,7 @@ private fun resolvePhis() {
                     // Since we're emitting linear IR (not a real CFG), we handle this
                     // by keying phi copies on a synthetic edge ID (predId * 1000 + blockId)
                     // and emitting them in the correct position during output.
-                    // In practice, the Lectern compiler's if/else pattern always has
+                    // In practice, the quill compiler's if/else pattern always has
                     // dedicated then/else blocks that each jump to merge, so predecessors
                     // of the merge block typically have only one successor (the merge).
                     // We add the copies to the predecessor anyway; if the predecessor's
@@ -368,18 +368,18 @@ Also remove the old `convertPhis()` method entirely — it's replaced by `resolv
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaTest.testSsaDeconstructorPhiMultiplePredecessors"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaTest.testSsaDeconstructorPhiMultiplePredecessors"`
 Expected: PASS
 
 - [ ] **Step 5: Run all SSA tests**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaTest"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaTest"`
 Expected: All pass
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/ssa/SsaDeconstructor.kt src/test/kotlin/org/lectern/ssa/SsaTest.kt
+git add src/main/kotlin/org/quill/ssa/SsaDeconstructor.kt src/test/kotlin/org/quill/ssa/SsaTest.kt
 git commit -m "fix: proper phi resolution with predecessor copies in SsaDeconstructor"
 ```
 
@@ -390,15 +390,15 @@ git commit -m "fix: proper phi resolution with predecessor copies in SsaDeconstr
 ### Task 3: Add SSA round-trip to `Main.kt`
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
 
 - [ ] **Step 1: Add SSA imports and round-trip call**
 
 In `Main.kt`, add imports:
 
 ```kotlin
-import org.lectern.ssa.SsaBuilder
-import org.lectern.ssa.SsaDeconstructor
+import org.quill.ssa.SsaBuilder
+import org.quill.ssa.SsaDeconstructor
 ```
 
 After the `AstLowerer().lower(folded)` call and before `LivenessAnalyzer().analyze()`, insert the SSA round-trip:
@@ -419,18 +419,18 @@ val chunk = IrCompiler().compile(AstLowerer.LoweredResult(rewritten, ssaResult.c
 
 - [ ] **Step 2: Test manually with a simple program**
 
-Run: `./gradlew run --args="test_simple.lec"`
+Run: `./gradlew run --args="test_simple.quill"`
 Expected: Same output as before (prints 0 through 4)
 
 - [ ] **Step 3: Test with a more complex program**
 
-Run: `./gradlew run --args="test_features.lec"`
+Run: `./gradlew run --args="test_features.quill"`
 Expected: Same output as before (string interpolation, default params work)
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/Main.kt
+git add src/main/kotlin/org/quill/Main.kt
 git commit -m "feat: wire SSA round-trip into main compilation pipeline"
 ```
 
@@ -439,13 +439,13 @@ git commit -m "feat: wire SSA round-trip into main compilation pipeline"
 ### Task 4: Add SSA round-trip to `IrCompiler.kt` for functions and methods
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
 
 - [ ] **Step 1: Add SSA imports**
 
 ```kotlin
-import org.lectern.ssa.SsaBuilder
-import org.lectern.ssa.SsaDeconstructor
+import org.quill.ssa.SsaBuilder
+import org.quill.ssa.SsaDeconstructor
 ```
 
 - [ ] **Step 2: Add SSA round-trip before function body compilation**
@@ -482,18 +482,18 @@ for ((methodName, methodInfo) in instr.methods) {
 
 - [ ] **Step 4: Test with programs that use functions**
 
-Run: `./gradlew run --args="test_features.lec"`
+Run: `./gradlew run --args="test_features.quill"`
 Expected: Same output (functions with defaults work)
 
 - [ ] **Step 5: Test with programs that use classes**
 
-Run: `./gradlew run --args="test_comprehensive.lec"`
+Run: `./gradlew run --args="test_comprehensive.quill"`
 Expected: Same output (classes, methods, inheritance work)
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/ast/IrCompiler.kt
+git add src/main/kotlin/org/quill/ast/IrCompiler.kt
 git commit -m "feat: apply SSA round-trip to function and method bodies in IrCompiler"
 ```
 
@@ -504,12 +504,12 @@ git commit -m "feat: apply SSA round-trip to function and method bodies in IrCom
 ### Task 5: Lexer tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/lang/LexerTest.kt`
+- Create: `src/test/kotlin/org/quill/lang/LexerTest.kt`
 
 - [ ] **Step 1: Write lexer tests**
 
 ```kotlin
-package org.lectern.lang
+package org.quill.lang
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -575,13 +575,13 @@ class LexerTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.lang.LexerTest"`
+Run: `./gradlew test --tests "org.quill.lang.LexerTest"`
 Expected: All PASS. If any fail, adjust test expectations to match actual lexer behavior.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/lang/LexerTest.kt
+git add src/test/kotlin/org/quill/lang/LexerTest.kt
 git commit -m "test: add lexer unit tests"
 ```
 
@@ -590,12 +590,12 @@ git commit -m "test: add lexer unit tests"
 ### Task 6: Parser tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/lang/ParserTest.kt`
+- Create: `src/test/kotlin/org/quill/lang/ParserTest.kt`
 
 - [ ] **Step 1: Write parser tests**
 
 ```kotlin
-package org.lectern.lang
+package org.quill.lang
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -703,13 +703,13 @@ class ParserTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.lang.ParserTest"`
+Run: `./gradlew test --tests "org.quill.lang.ParserTest"`
 Expected: All PASS. Adjust expectations if parser has different behavior.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/lang/ParserTest.kt
+git add src/test/kotlin/org/quill/lang/ParserTest.kt
 git commit -m "test: add parser unit tests"
 ```
 
@@ -718,14 +718,14 @@ git commit -m "test: add parser unit tests"
 ### Task 7: ConstantFolder tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/ConstantFolderTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/ConstantFolderTest.kt`
 
 - [ ] **Step 1: Write constant folder tests**
 
 ```kotlin
-package org.lectern.ast
+package org.quill.ast
 
-import org.lectern.lang.*
+import org.quill.lang.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -784,13 +784,13 @@ class ConstantFolderTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.ConstantFolderTest"`
+Run: `./gradlew test --tests "org.quill.ast.ConstantFolderTest"`
 Expected: All PASS
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/ConstantFolderTest.kt
+git add src/test/kotlin/org/quill/ast/ConstantFolderTest.kt
 git commit -m "test: add constant folder unit tests"
 ```
 
@@ -801,14 +801,14 @@ git commit -m "test: add constant folder unit tests"
 ### Task 8: AstLowerer tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/AstLowererTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/AstLowererTest.kt`
 
 - [ ] **Step 1: Write AST lowerer tests**
 
 ```kotlin
-package org.lectern.ast
+package org.quill.ast
 
-import org.lectern.lang.*
+import org.quill.lang.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -879,13 +879,13 @@ class AstLowererTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.AstLowererTest"`
+Run: `./gradlew test --tests "org.quill.ast.AstLowererTest"`
 Expected: All PASS
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/AstLowererTest.kt
+git add src/test/kotlin/org/quill/ast/AstLowererTest.kt
 git commit -m "test: add AST lowerer unit tests"
 ```
 
@@ -894,19 +894,19 @@ git commit -m "test: add AST lowerer unit tests"
 ### Task 9: SSA round-trip tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ssa/SsaRoundTripTest.kt`
+- Create: `src/test/kotlin/org/quill/ssa/SsaRoundTripTest.kt`
 
 - [ ] **Step 1: Write SSA round-trip tests**
 
 ```kotlin
-package org.lectern.ssa
+package org.quill.ssa
 
-import org.lectern.ast.AstLowerer
-import org.lectern.ast.ConstantFolder
-import org.lectern.ast.LivenessAnalyzer
-import org.lectern.ast.RegisterAllocator
-import org.lectern.lang.*
-import org.lectern.rewrite
+import org.quill.ast.AstLowerer
+import org.quill.ast.ConstantFolder
+import org.quill.ast.LivenessAnalyzer
+import org.quill.ast.RegisterAllocator
+import org.quill.lang.*
+import org.quill.rewrite
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -1048,13 +1048,13 @@ class SsaRoundTripTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ssa.SsaRoundTripTest"`
+Run: `./gradlew test --tests "org.quill.ssa.SsaRoundTripTest"`
 Expected: All PASS. If any fail, this indicates an SSA round-trip correctness bug to fix.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ssa/SsaRoundTripTest.kt
+git add src/test/kotlin/org/quill/ssa/SsaRoundTripTest.kt
 git commit -m "test: add SSA round-trip end-to-end tests"
 ```
 
@@ -1063,14 +1063,14 @@ git commit -m "test: add SSA round-trip end-to-end tests"
 ### Task 10: LivenessAnalyzer tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/LivenessAnalyzerTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/LivenessAnalyzerTest.kt`
 
 - [ ] **Step 1: Write liveness analyzer tests**
 
 ```kotlin
-package org.lectern.ast
+package org.quill.ast
 
-import org.lectern.lang.*
+import org.quill.lang.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -1125,13 +1125,13 @@ class LivenessAnalyzerTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.LivenessAnalyzerTest"`
+Run: `./gradlew test --tests "org.quill.ast.LivenessAnalyzerTest"`
 Expected: All PASS
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/LivenessAnalyzerTest.kt
+git add src/test/kotlin/org/quill/ast/LivenessAnalyzerTest.kt
 git commit -m "test: add liveness analyzer unit tests"
 ```
 
@@ -1140,14 +1140,14 @@ git commit -m "test: add liveness analyzer unit tests"
 ### Task 11: RegisterAllocator tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/RegisterAllocatorTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/RegisterAllocatorTest.kt`
 
 - [ ] **Step 1: Write register allocator tests**
 
 ```kotlin
-package org.lectern.ast
+package org.quill.ast
 
-import org.lectern.lang.*
+import org.quill.lang.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -1194,13 +1194,13 @@ class RegisterAllocatorTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.RegisterAllocatorTest"`
+Run: `./gradlew test --tests "org.quill.ast.RegisterAllocatorTest"`
 Expected: All PASS
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/RegisterAllocatorTest.kt
+git add src/test/kotlin/org/quill/ast/RegisterAllocatorTest.kt
 git commit -m "test: add register allocator unit tests"
 ```
 
@@ -1211,14 +1211,14 @@ git commit -m "test: add register allocator unit tests"
 ### Task 12: IrCompiler tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/IrCompilerTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/IrCompilerTest.kt`
 
 - [ ] **Step 1: Write IrCompiler tests**
 
 ```kotlin
-package org.lectern.ast
+package org.quill.ast
 
-import org.lectern.lang.*
+import org.quill.lang.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -1292,13 +1292,13 @@ class IrCompilerTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.IrCompilerTest"`
+Run: `./gradlew test --tests "org.quill.ast.IrCompilerTest"`
 Expected: All PASS
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/IrCompilerTest.kt
+git add src/test/kotlin/org/quill/ast/IrCompilerTest.kt
 git commit -m "test: add IrCompiler unit tests"
 ```
 
@@ -1307,15 +1307,15 @@ git commit -m "test: add IrCompiler unit tests"
 ### Task 13: VM end-to-end tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/VMTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/VMTest.kt`
 
 - [ ] **Step 1: Write VM end-to-end tests**
 
 ```kotlin
-package org.lectern.ast
+package org.quill.ast
 
-import org.lectern.lang.*
-import org.lectern.rewrite
+import org.quill.lang.*
+import org.quill.rewrite
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -1457,13 +1457,13 @@ class VMTest {
 
 - [ ] **Step 2: Run tests**
 
-Run: `./gradlew test --tests "org.lectern.ast.VMTest"`
+Run: `./gradlew test --tests "org.quill.ast.VMTest"`
 Expected: All PASS. Fix any test expectations that don't match VM output format.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/ast/VMTest.kt
+git add src/test/kotlin/org/quill/ast/VMTest.kt
 git commit -m "test: add VM end-to-end execution tests"
 ```
 
@@ -1476,19 +1476,19 @@ git commit -m "test: add VM end-to-end execution tests"
 Run: `./gradlew test`
 Expected: All tests pass with zero failures
 
-- [ ] **Step 2: Run all `.lec` test files to verify no regressions**
+- [ ] **Step 2: Run all `.quill` test files to verify no regressions**
 
 Run each manually:
 ```bash
-./gradlew run --args="test_simple.lec"
-./gradlew run --args="test_features.lec"
-./gradlew run --args="test_comprehensive.lec"
-./gradlew run --args="test_bubble.lec"
-./gradlew run --args="test_for.lec"
-./gradlew run --args="test_for_array.lec"
-./gradlew run --args="test_index.lec"
-./gradlew run --args="test_interpolation.lec"
-./gradlew run --args="test_compound.lec"
+./gradlew run --args="test_simple.quill"
+./gradlew run --args="test_features.quill"
+./gradlew run --args="test_comprehensive.quill"
+./gradlew run --args="test_bubble.quill"
+./gradlew run --args="test_for.quill"
+./gradlew run --args="test_for_array.quill"
+./gradlew run --args="test_index.quill"
+./gradlew run --args="test_interpolation.quill"
+./gradlew run --args="test_compound.quill"
 ```
 
 Expected: All produce same output as before SSA integration
@@ -1503,5 +1503,5 @@ git commit -m "feat: SSA round-trip integration and comprehensive test coverage
 - Fix SsaDeconstructor: proper phi resolution with predecessor copies
 - Wire SSA round-trip into Main.kt and IrCompiler.kt
 - Add 9 new test files covering all compiler phases
-- All existing .lec programs produce identical output"
+- All existing .quill programs produce identical output"
 ```

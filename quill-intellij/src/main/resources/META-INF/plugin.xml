@@ -1,0 +1,66 @@
+<idea-plugin>
+    <id>org.quill.intellij</id>
+    <name>Quill</name>
+    <vendor email="support@quill.dev" url="https://quill.dev">Quill</vendor>
+
+    <description><![CDATA[
+    <p>Provides support for the Quill programming language.</p>
+    <p>Features:</p>
+    <ul>
+        <li>Syntax highlighting</li>
+        <li>Code completion</li>
+        <li>Live templates (snippets)</li>
+        <li>Brace matching</li>
+        <li>Comment handling</li>
+        <li>File templates</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Language -->
+        <language id="Quill"
+                  name="Quill"
+                  suffixes="quill"
+                  displayName="Quill"
+                  implementationClass="org.quill.intellij.lang.QuillLanguage"/>
+
+        <!-- File Type -->
+        <fileType name="Quill"
+                  implementationClass="org.quill.intellij.file.QuillFileType"
+                  fieldName="INSTANCE"
+                  language="Quill"
+                  extensions="quill"/>
+
+        <!-- Parser Definition -->
+        <lang.parserDefinition language="Quill"
+                               implementationClass="org.quill.intellij.parser.QuillParserDefinition"/>
+
+        <!-- Syntax Highlighter -->
+        <lang.syntaxHighlighterFactory language="Quill"
+                                       implementationClass="org.quill.intellij.highlighter.QuillSyntaxHighlighterFactory"/>
+
+        <!-- Color Settings Page -->
+        <colorSettingsPage implementationClass="org.quill.intellij.highlighter.QuillColorSettingsPage"/>
+
+        <!-- Commenter -->
+        <lang.commenter language="Quill"
+                        implementationClass="org.quill.intellij.lang.QuillCommenter"/>
+
+        <!-- Brace Matcher -->
+        <lang.braceMatcher language="Quill"
+                           implementationClass="org.quill.intellij.lang.QuillBraceMatcher"/>
+
+        <!-- Code Completion -->
+        <completion.contributor language="Quill"
+                                implementationClass="org.quill.intellij.completion.QuillCompletionContributor"/>
+
+        <!-- Live Templates -->
+        <defaultLiveTemplatesProvider implementation="org.quill.intellij.templates.QuillLiveTemplatesProvider"/>
+        <liveTemplateContext implementation="org.quill.intellij.templates.QuillContext"/>
+
+        <!-- File Templates -->
+        <internalFileTemplate name="Quill File"/>
+    </extensions>
+</idea-plugin>

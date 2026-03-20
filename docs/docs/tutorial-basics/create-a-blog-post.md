@@ -20,7 +20,7 @@ authors:
     url: https://github.com/JoelMarcey
     image_url: https://github.com/JoelMarcey.png
   - name: Sébastien Lorber
-    title: Docusaurus mlecterntlecterner
+    title: Docusaurus mquilltquiller
     url: https://sebastienlorber.com
     image_url: https://github.com/slorber.png
 tags: [greetings]

@@ -1,0 +1,8 @@
+// Main entry point
+
+fn main() {
+    // Your code here
+    print("Hello, World!")
+}
+
+main()

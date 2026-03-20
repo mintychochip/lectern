@@ -1,0 +1,99 @@
+// Quill Example File
+// Test syntax highlighting and linting
+
+// Variable declarations
+let count = 0;
+const PI = 3.14159;
+let name = "Quill";
+
+// Types
+bool isReady = true;
+int counter = 42;
+float ratio = 2.5;
+double precise = 3.14159265358979;
+string greeting = "Hello, World!";
+
+// String interpolation
+let user = "Alice";
+let message = "Welcome, ${user}!";
+
+// Function definition
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+
+// Arrow-style return type
+fn multiply(x: int, y: int) -> int {
+    return x * y;
+}
+
+// Control flow
+if (count > 0) {
+    print("Positive");
+} else {
+    print("Zero or negative");
+}
+
+// Loops
+while (count < 10) {
+    count++;
+}
+
+for (i in 0..5) {
+
+}
+
+for (i in 0..5) {
+    print(i);
+}
+
+// Logical operators
+if (isReady and count > 5) {
+    print("Ready!");
+}
+
+if (not isReady or count == 0) {
+    print("Not ready or zero");
+}
+
+// Class definition
+class Person {
+    let name: string;
+    let age: int;
+
+    fn greet() -> string {
+        return "Hello, I'm ${this.name}";
+    }
+}
+
+// Enum
+enum Color {
+    Red,
+    Green,
+    Blue
+}
+
+// Import
+import { helper } from "utils";
+
+// Arithmetic with compound assignment
+let total = 0;
+total += 10;
+total -= 5;
+total *= 2;
+total /= 3;
+
+// Comparison operators
+if (count == 5) { print("equal"); }
+if (count != 3) { print("not equal"); }
+if (count < 10) { print("less"); }
+if (count > 1) { print("greater"); }
+if (count <= 5) { print("lte"); }
+if (count >= 0) { print("gte"); }
+
+// Increment/Decrement
+count++;
+count--;
+
+// Power operator
+let power = 2 ** 8;

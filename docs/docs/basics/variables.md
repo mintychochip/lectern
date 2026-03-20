@@ -4,14 +4,14 @@ sidebar_position: 1
 
 # Variables
 
-Learn how to declare and use variables in Lectern.
+Learn how to declare and use variables in quill.
 
 ## Variable Declaration
 
 Use the `let` keyword to declare variables:
 
-```lectern
-let name = "Lectern"
+```quill
+let name = "quill"
 let age = 25
 let isActive = true
 ```
@@ -20,7 +20,7 @@ let isActive = true
 
 Reassign variables after declaration:
 
-```lectern
+```quill
 let count = 0
 count = 1
 count = count + 1
@@ -31,7 +31,7 @@ print(count)  // Output: 2
 
 Variables are scoped to the block they're declared in:
 
-```lectern
+```quill
 let global = "I'm global"
 
 fn example() {
@@ -49,10 +49,10 @@ print(global)  // Works
 Variable names must:
 
 - Start with a letter or underscore
-- Contlectern only letters, numbers, and underscores
+- Contquill only letters, numbers, and underscores
 - Not be a reserved keyword
 
-```lectern
+```quill
 // Valid names
 let myVar = 1
 let _private = 2

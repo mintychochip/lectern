@@ -4,20 +4,20 @@ sidebar_position: 2
 
 # Your First Program
 
-Let's write and understand your first Lectern program.
+Let's write and understand your first quill program.
 
 ## Hello World
 
-Create a file named `hello.lectern`:
+Create a file named `hello.quill`:
 
-```lectern title="hello.lectern"
+```quill title="hello.quill"
 print("Hello, World!")
 ```
 
 Run it:
 
 ```bash
-./gradlew run --args="hello.lectern"
+./gradlew run --args="hello.quill"
 ```
 
 Output:
@@ -30,9 +30,9 @@ Hello, World!
 
 Let's look at a slightly more complex program:
 
-```lectern
+```quill
 // This is a comment
-let name = "Lectern"
+let name = "quill"
 let version = 1.0
 
 // Define a function
@@ -53,9 +53,9 @@ print(greet(name))
 
 ## Variables and Types
 
-Lectern supports several data types:
+quill supports several data types:
 
-```lectern
+```quill
 let integer = 42          // Number
 let float = 3.14          // Number (decimal)
 let string = "Hello"      // String

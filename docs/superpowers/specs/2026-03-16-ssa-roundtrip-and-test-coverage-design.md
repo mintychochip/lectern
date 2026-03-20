@@ -9,7 +9,7 @@ Integrate the existing SSA infrastructure into the main compilation pipeline as 
 
 ## Context
 
-The Lectern compiler has a complete SSA infrastructure (`ssa/` package) that is built and tested in isolation but never called from the main compilation pipeline in `Main.kt`. The goal is to wire it in and prove that the round-trip produces functionally equivalent IR — establishing the foundation for future SSA-based optimizations.
+The quill compiler has a complete SSA infrastructure (`ssa/` package) that is built and tested in isolation but never called from the main compilation pipeline in `Main.kt`. The goal is to wire it in and prove that the round-trip produces functionally equivalent IR — establishing the foundation for future SSA-based optimizations.
 
 Additionally, the project has minimal test coverage (3 test files for CFG, SSA, and optimization passes). Every pipeline phase needs dedicated unit tests to guarantee compiler correctness.
 
@@ -175,7 +175,7 @@ This fix is scoped as part of this work, not deferred.
 
 ## Success Criteria
 
-1. All existing `.lec` test files produce identical output with and without the SSA round-trip
+1. All existing `.quill` test files produce identical output with and without the SSA round-trip
 2. All new unit tests pass
 3. `./gradlew test` passes with zero failures
 4. No regressions in any existing functionality

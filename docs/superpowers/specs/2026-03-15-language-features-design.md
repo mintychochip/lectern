@@ -5,7 +5,7 @@
 
 ## Overview
 
-Implement the remaining TODO language features in the Lectern compiler/VM in order of increasing complexity: Ternary → Maps → Enums → Lambdas/Closures → Imports → Config.
+Implement the remaining TODO language features in the quill compiler/VM in order of increasing complexity: Ternary → Maps → Enums → Lambdas/Closures → Imports → Config.
 
 ## Current Pipeline
 

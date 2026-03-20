@@ -1,0 +1,214 @@
+<templateSet group="Quill">
+    <!-- Function declaration -->
+    <template name="fn"
+              value="fn $NAME$($PARAMS$) {&#10;    $END$&#10;}"
+              description="Function declaration"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+        <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Let variable -->
+    <template name="let"
+              value="let $NAME$ = $VALUE$"
+              description="Variable declaration"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;variable&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Const variable -->
+    <template name="const"
+              value="const $NAME$ = $VALUE$"
+              description="Constant declaration"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;CONSTANT&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- If statement -->
+    <template name="if"
+              value="if ($CONDITION$) {&#10;    $END$&#10;}"
+              description="If statement"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="CONDITION" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- If-else statement -->
+    <template name="ife"
+              value="if ($CONDITION$) {&#10;    $THEN$&#10;} else {&#10;    $ELSE$&#10;}"
+              description="If-else statement"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="CONDITION" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="THEN" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ELSE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- While loop -->
+    <template name="while"
+              value="while ($CONDITION$) {&#10;    $END$&#10;}"
+              description="While loop"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="CONDITION" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- For loop -->
+    <template name="for"
+              value="for $VAR$ in $RANGE$ {&#10;    $END$&#10;}"
+              description="For loop"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="VAR" expression="" defaultValue="&quot;i&quot;" alwaysStopAt="true"/>
+        <variable name="RANGE" expression="" defaultValue="&quot;0..10&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Print statement -->
+    <template name="print"
+              value="print($VALUE$)"
+              description="Print to console"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Print line -->
+    <template name="println"
+              value="print($VALUE$ + &quot;\n&quot;)"
+              description="Print line to console"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Class declaration -->
+    <template name="class"
+              value="class $NAME$ {&#10;    $END$&#10;}"
+              description="Class declaration"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;ClassName&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Class with extends -->
+    <template name="classe"
+              value="class $NAME$ extends $PARENT$ {&#10;    $END$&#10;}"
+              description="Class with inheritance"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;ClassName&quot;" alwaysStopAt="true"/>
+        <variable name="PARENT" expression="" defaultValue="&quot;ParentClass&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Enum declaration -->
+    <template name="enum"
+              value="enum $NAME$ {&#10;    $VALUES$&#10;}"
+              description="Enum declaration"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;EnumName&quot;" alwaysStopAt="true"/>
+        <variable name="VALUES" expression="" defaultValue="&quot;VALUE1, VALUE2&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Return statement -->
+    <template name="return"
+              value="return $VALUE$"
+              description="Return statement"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Lambda expression -->
+    <template name="lambda"
+              value="fn($PARAMS$) -> $BODY$"
+              description="Lambda expression"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="BODY" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Import statement -->
+    <template name="import"
+              value="import $MODULE$"
+              description="Import module"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="MODULE" expression="" defaultValue="&quot;module&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Import from statement -->
+    <template name="importf"
+              value="from &quot;$MODULE$&quot; import { $NAMES$ }"
+              description="Import specific items from module"
+              toReformat="true"
+              toShortenFQNames="true">
+        <variable name="MODULE" expression="" defaultValue="&quot;module&quot;" alwaysStopAt="true"/>
+        <variable name="NAMES" expression="" defaultValue="&quot;item1, item2&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Main function -->
+    <template name="main"
+              value="fn main() {&#10;    $END$&#10;}&#10;&#10;main()"
+              description="Main function entry point"
+              toReformat="true"
+              toShortenFQNames="true">
+        <context>
+            <option name="QUILL" value="true"/>
+        </context>
+    </template>
+</templateSet>

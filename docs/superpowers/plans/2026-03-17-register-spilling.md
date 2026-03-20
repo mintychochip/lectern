@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement correct register spilling so Lectern functions with more than 16 simultaneously live virtual registers compile and execute correctly.
+**Goal:** Implement correct register spilling so quill functions with more than 16 simultaneously live virtual registers compile and execute correctly.
 
 **Architecture:** `SpillInserter` is a new pass that runs after `RegisterAllocator` and fully resolves all virtual registers to physical registers — replacing `rewrite()` / `rewriteRegisters()` entirely. For spilled virtuals it injects `Unspill`/`Spill` IR instructions around each use/def. The VM's `CallFrame` gains a `spills` array sized at frame creation from `Chunk.spillSlotCount`.
 
@@ -15,9 +15,9 @@
 ### Task 1: Add Spill/Unspill IR instructions and opcodes
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/IR.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/OpCode.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/lang/IR.kt`
+- Modify: `src/main/kotlin/org/quill/lang/OpCode.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
 
 - [ ] **Step 1: Add `Spill` and `Unspill` to `IR.kt`**
 
@@ -56,9 +56,9 @@
 - [ ] **Step 5: Commit**
 
   ```bash
-  git add src/main/kotlin/org/lectern/lang/IR.kt \
-          src/main/kotlin/org/lectern/lang/OpCode.kt \
-          src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt
+  git add src/main/kotlin/org/quill/lang/IR.kt \
+          src/main/kotlin/org/quill/lang/OpCode.kt \
+          src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt
   git commit -m "feat: add Spill/Unspill IR instructions and SPILL/UNSPILL opcodes"
   ```
 
@@ -67,7 +67,7 @@
 ### Task 2: Add `spillSlotCount` to `Chunk`
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Chunk.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Chunk.kt`
 
 - [ ] **Step 1: Add `spillSlotCount` field to `Chunk`**
 
@@ -89,7 +89,7 @@
 - [ ] **Step 3: Commit**
 
   ```bash
-  git add src/main/kotlin/org/lectern/lang/Chunk.kt
+  git add src/main/kotlin/org/quill/lang/Chunk.kt
   git commit -m "feat: add spillSlotCount field to Chunk"
   ```
 
@@ -100,16 +100,16 @@
 ### Task 3: Return `AllocResult` from `RegisterAllocator` and update callers
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/RegisterAllocator.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt` (three call sites)
-- Modify: `src/main/kotlin/org/lectern/Main.kt` (one call site)
+- Modify: `src/main/kotlin/org/quill/ast/RegisterAllocator.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt` (three call sites)
+- Modify: `src/main/kotlin/org/quill/Main.kt` (one call site)
 
 - [ ] **Step 1: Rewrite `RegisterAllocator.kt`**
 
   Replace the entire file contents:
 
   ```kotlin
-  package org.lectern.ast
+  package org.quill.ast
 
   class RegisterAllocator(private val numRegs: Int = 16) {
 
@@ -231,9 +231,9 @@
 - [ ] **Step 5: Commit**
 
   ```bash
-  git add src/main/kotlin/org/lectern/ast/RegisterAllocator.kt \
-          src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-          src/main/kotlin/org/lectern/Main.kt
+  git add src/main/kotlin/org/quill/ast/RegisterAllocator.kt \
+          src/main/kotlin/org/quill/ast/IrCompiler.kt \
+          src/main/kotlin/org/quill/Main.kt
   git commit -m "refactor: RegisterAllocator returns AllocResult with spills map"
   ```
 
@@ -244,20 +244,20 @@
 ### Task 4: Implement SpillInserter with unit tests
 
 **Files:**
-- Create: `src/main/kotlin/org/lectern/ast/SpillInserter.kt`
-- Create: `src/test/kotlin/org/lectern/ast/SpillInserterTest.kt`
+- Create: `src/main/kotlin/org/quill/ast/SpillInserter.kt`
+- Create: `src/test/kotlin/org/quill/ast/SpillInserterTest.kt`
 
 `SpillInserter` fully resolves all virtual registers to physical registers. For spilled virtuals it injects `Unspill`/`Spill` wrapper instructions. It replaces `rewrite()` and `rewriteRegisters()` — those functions are removed in Task 6.
 
 - [ ] **Step 1: Write the failing test**
 
-  Create `src/test/kotlin/org/lectern/ast/SpillInserterTest.kt`:
+  Create `src/test/kotlin/org/quill/ast/SpillInserterTest.kt`:
 
   ```kotlin
-  package org.lectern.ast
+  package org.quill.ast
 
-  import org.lectern.lang.IrInstr
-  import org.lectern.lang.TokenType
+  import org.quill.lang.IrInstr
+  import org.quill.lang.TokenType
   import kotlin.test.Test
   import kotlin.test.assertEquals
   import kotlin.test.assertFailsWith
@@ -378,18 +378,18 @@
 - [ ] **Step 2: Run test to verify it fails**
 
   ```
-  ./gradlew test --tests "org.lectern.ast.SpillInserterTest"
+  ./gradlew test --tests "org.quill.ast.SpillInserterTest"
   ```
   Expected: FAIL — `SpillInserter` class does not exist yet.
 
 - [ ] **Step 3: Implement `SpillInserter.kt`**
 
-  Create `src/main/kotlin/org/lectern/ast/SpillInserter.kt`:
+  Create `src/main/kotlin/org/quill/ast/SpillInserter.kt`:
 
   ```kotlin
-  package org.lectern.ast
+  package org.quill.ast
 
-  import org.lectern.lang.IrInstr
+  import org.quill.lang.IrInstr
 
   /**
    * Resolves all virtual registers to physical registers, injecting Spill/Unspill
@@ -510,7 +510,7 @@
 - [ ] **Step 4: Run tests to verify they pass**
 
   ```
-  ./gradlew test --tests "org.lectern.ast.SpillInserterTest"
+  ./gradlew test --tests "org.quill.ast.SpillInserterTest"
   ```
   Expected: All 3 tests PASS.
 
@@ -524,8 +524,8 @@
 - [ ] **Step 6: Commit**
 
   ```bash
-  git add src/main/kotlin/org/lectern/ast/SpillInserter.kt \
-          src/test/kotlin/org/lectern/ast/SpillInserterTest.kt
+  git add src/main/kotlin/org/quill/ast/SpillInserter.kt \
+          src/test/kotlin/org/quill/ast/SpillInserterTest.kt
   git commit -m "feat: implement SpillInserter pass for register spilling"
   ```
 
@@ -536,7 +536,7 @@
 ### Task 5: Add spill array to CallFrame and dispatch SPILL/UNSPILL
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
 
 - [ ] **Step 1: Add `spills` array to `CallFrame`**
 
@@ -582,7 +582,7 @@
 - [ ] **Step 5: Commit**
 
   ```bash
-  git add src/main/kotlin/org/lectern/ast/VM.kt
+  git add src/main/kotlin/org/quill/ast/VM.kt
   git commit -m "feat: add spills array to CallFrame and dispatch SPILL/UNSPILL in VM"
   ```
 
@@ -593,8 +593,8 @@
 ### Task 6: Add SPILL/UNSPILL compilation and wire SpillInserter into all sub-pipelines
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
 
 `SpillInserter` replaces `rewrite()` / `rewriteRegisters()`. After this task, all virtual register resolution happens in `SpillInserter`. Both `rewrite()` (in `Main.kt`) and `rewriteRegisters()` (in `IrCompiler`) are removed.
 
@@ -612,7 +612,7 @@
   Add to the imports at the top:
 
   ```kotlin
-  import org.lectern.ast.SpillInserter
+  import org.quill.ast.SpillInserter
   ```
 
 - [ ] **Step 3: Replace `LoadFunc` sub-pipeline to use `SpillInserter`**
@@ -699,7 +699,7 @@
 
   Also add the import at the top of `Main.kt`:
   ```kotlin
-  import org.lectern.ast.SpillInserter
+  import org.quill.ast.SpillInserter
   ```
 
 - [ ] **Step 8: Delete `rewrite()` from `Main.kt` and remove its unused import**
@@ -708,7 +708,7 @@
 
   Also remove the now-orphaned import on line 10. `rewrite()` is the only place in `Main.kt` that names `IrInstr` explicitly; `main()` only uses it via type inference (no explicit annotation). After deletion the import is unused and the compiler will emit a warning:
   ```kotlin
-  import org.lectern.lang.IrInstr
+  import org.quill.lang.IrInstr
   ```
 
 - [ ] **Step 9: Verify the full test suite passes**
@@ -721,8 +721,8 @@
 - [ ] **Step 10: Commit**
 
   ```bash
-  git add src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-          src/main/kotlin/org/lectern/Main.kt
+  git add src/main/kotlin/org/quill/ast/IrCompiler.kt \
+          src/main/kotlin/org/quill/Main.kt
   git commit -m "feat: wire SpillInserter into all compilation sub-pipelines, remove rewrite()"
   ```
 
@@ -733,27 +733,27 @@
 ### Task 7: End-to-end register spill tests
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/ast/RegisterSpillTest.kt`
+- Create: `src/test/kotlin/org/quill/ast/RegisterSpillTest.kt`
 
-These tests compile and execute real Lectern programs that exercise spilling through the full pipeline.
+These tests compile and execute real quill programs that exercise spilling through the full pipeline.
 
 - [ ] **Step 1: Write the failing tests**
 
-  Create `src/test/kotlin/org/lectern/ast/RegisterSpillTest.kt`:
+  Create `src/test/kotlin/org/quill/ast/RegisterSpillTest.kt`:
 
   ```kotlin
-  package org.lectern.ast
+  package org.quill.ast
 
-  import org.lectern.lang.*
-  import org.lectern.ssa.SsaBuilder
-  import org.lectern.ssa.SsaDeconstructor
+  import org.quill.lang.*
+  import org.quill.ssa.SsaBuilder
+  import org.quill.ssa.SsaDeconstructor
   import kotlin.test.Test
   import kotlin.test.assertEquals
   import kotlin.test.assertFailsWith
 
   class RegisterSpillTest {
 
-      /** Compile and run a Lectern source string, capturing print() output. */
+      /** Compile and run a quill source string, capturing print() output. */
       private fun run(source: String): String {
           val output = StringBuilder()
           val tokens = tokenize(source)
@@ -897,7 +897,7 @@ These tests compile and execute real Lectern programs that exercise spilling thr
 - [ ] **Step 2: Run tests to verify they fail (or pass — both outcomes are acceptable)**
 
   ```
-  ./gradlew test --tests "org.lectern.ast.RegisterSpillTest"
+  ./gradlew test --tests "org.quill.ast.RegisterSpillTest"
   ```
 
   If they already pass (because the pipeline now handles spilling): proceed to Step 4.
@@ -913,7 +913,7 @@ These tests compile and execute real Lectern programs that exercise spilling thr
 - [ ] **Step 4: Commit**
 
   ```bash
-  git add src/test/kotlin/org/lectern/ast/RegisterSpillTest.kt
+  git add src/test/kotlin/org/quill/ast/RegisterSpillTest.kt
   git commit -m "test: add register spill integration tests (basic spill + spill across branch)"
   ```
 

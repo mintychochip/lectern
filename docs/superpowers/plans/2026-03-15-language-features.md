@@ -1,8 +1,8 @@
-# Lectern Language Features Implementation Plan
+# quill Language Features Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement 6 remaining TODO language features in the Lectern compiler/VM: Ternary, Maps, Enums, Lambdas/Closures, Imports, and Config.
+**Goal:** Implement 6 remaining TODO language features in the quill compiler/VM: Ternary, Maps, Enums, Lambdas/Closures, Imports, and Config.
 
 **Architecture:** Each feature extends the same pipeline (AST → AstLowerer → flat IrInstr list → IrCompiler → Chunk → VM). Features are implemented in order of complexity, each adding new tokens/parser rules/IR nodes/opcodes/VM handlers. A single test file drives all features end-to-end.
 
@@ -14,21 +14,21 @@
 
 | File | Changes |
 |------|---------|
-| `src/main/kotlin/org/lectern/lang/Token.kt` | Add `QUESTION_MARK`, `KW_CONFIG` |
-| `src/main/kotlin/org/lectern/lang/Lexer.kt` | Handle `'?'`, add `"config"` keyword |
-| `src/main/kotlin/org/lectern/lang/AST.kt` | Replace `ImportStmt`/`ImportFromStmt` fields; add `ConfigFieldDecl`; replace `ConfigStmt` |
-| `src/main/kotlin/org/lectern/lang/Parser.kt` | Ternary weight + case; `L_BRACE` map literal; `KW_FN` lambda; import rewrite; config parsing |
-| `src/main/kotlin/org/lectern/lang/IR.kt` | Add 8 new `IrInstr` subclasses |
-| `src/main/kotlin/org/lectern/lang/OpCode.kt` | Add 8 new opcodes |
-| `src/main/kotlin/org/lectern/lang/Value.kt` | Add `staticFields` body property to `ClassDescriptor`; add `UpvalueCell`, `Value.UpvalueRef`, `Value.Closure`, `Value.Module` |
-| `src/main/kotlin/org/lectern/lang/Chunk.kt` | Add `ConfigSchemaInfo`, `ConfigFieldInfo`, `configSchemas` |
-| `src/main/kotlin/org/lectern/ast/AstLowerer.kt` | Implement all 7 `TODO()` cases; add closure capture analysis; add `upvalueMap` field |
-| `src/main/kotlin/org/lectern/ast/IrCompiler.kt` | Fix `rewriteRegisters` catch-all; add 8 compile + rewrite cases |
-| `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt` | Add liveness cases for 8 new IR nodes |
-| `src/main/kotlin/org/lectern/ast/VM.kt` | Add `upvalues` to `CallFrame`; fix `GET_INDEX`/`SET_INDEX` for maps; add `GET_FIELD` for `Value.Class`/`Value.Module`; add 8 new opcode handlers; add module cache |
-| `src/main/kotlin/org/lectern/Main.kt` | Fix `rewrite()` catch-all; add rewrite cases for 8 new IR nodes |
+| `src/main/kotlin/org/quill/lang/Token.kt` | Add `QUESTION_MARK`, `KW_CONFIG` |
+| `src/main/kotlin/org/quill/lang/Lexer.kt` | Handle `'?'`, add `"config"` keyword |
+| `src/main/kotlin/org/quill/lang/AST.kt` | Replace `ImportStmt`/`ImportFromStmt` fields; add `ConfigFieldDecl`; replace `ConfigStmt` |
+| `src/main/kotlin/org/quill/lang/Parser.kt` | Ternary weight + case; `L_BRACE` map literal; `KW_FN` lambda; import rewrite; config parsing |
+| `src/main/kotlin/org/quill/lang/IR.kt` | Add 8 new `IrInstr` subclasses |
+| `src/main/kotlin/org/quill/lang/OpCode.kt` | Add 8 new opcodes |
+| `src/main/kotlin/org/quill/lang/Value.kt` | Add `staticFields` body property to `ClassDescriptor`; add `UpvalueCell`, `Value.UpvalueRef`, `Value.Closure`, `Value.Module` |
+| `src/main/kotlin/org/quill/lang/Chunk.kt` | Add `ConfigSchemaInfo`, `ConfigFieldInfo`, `configSchemas` |
+| `src/main/kotlin/org/quill/ast/AstLowerer.kt` | Implement all 7 `TODO()` cases; add closure capture analysis; add `upvalueMap` field |
+| `src/main/kotlin/org/quill/ast/IrCompiler.kt` | Fix `rewriteRegisters` catch-all; add 8 compile + rewrite cases |
+| `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt` | Add liveness cases for 8 new IR nodes |
+| `src/main/kotlin/org/quill/ast/VM.kt` | Add `upvalues` to `CallFrame`; fix `GET_INDEX`/`SET_INDEX` for maps; add `GET_FIELD` for `Value.Class`/`Value.Module`; add 8 new opcode handlers; add module cache |
+| `src/main/kotlin/org/quill/Main.kt` | Fix `rewrite()` catch-all; add rewrite cases for 8 new IR nodes |
 | `build.gradle.kts` | Add snakeyaml 2.2 and org.json:json dependencies (Config only) |
-| `src/test/kotlin/org/lectern/lang/LecternTest.kt` | **Create** — end-to-end test helper + feature tests |
+| `src/test/kotlin/org/quill/lang/quillTest.kt` | **Create** — end-to-end test helper + feature tests |
 
 ---
 
@@ -36,11 +36,11 @@
 
 ### Task 1: Fix `rewriteRegisters` catch-alls
 
-Both `IrCompiler.rewriteRegisters` (`src/main/kotlin/org/lectern/ast/IrCompiler.kt:168`) and `Main.rewrite` (`src/main/kotlin/org/lectern/Main.kt:75`) have `else -> instr` that silently passes unknown IR nodes through without remapping registers, causing silent runtime corruption when new IR nodes are added. Replace with fail-fast errors.
+Both `IrCompiler.rewriteRegisters` (`src/main/kotlin/org/quill/ast/IrCompiler.kt:168`) and `Main.rewrite` (`src/main/kotlin/org/quill/Main.kt:75`) have `else -> instr` that silently passes unknown IR nodes through without remapping registers, causing silent runtime corruption when new IR nodes are added. Replace with fail-fast errors.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
 
 - [ ] **Step 1: Fix `IrCompiler.kt`**
 
@@ -88,7 +88,7 @@ Expected: BUILD SUCCESSFUL
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/ast/IrCompiler.kt src/main/kotlin/org/lectern/Main.kt
+git add src/main/kotlin/org/quill/ast/IrCompiler.kt src/main/kotlin/org/quill/Main.kt
 git commit -m "fix: fail-fast on unhandled IR nodes in rewriteRegisters"
 ```
 
@@ -99,24 +99,24 @@ git commit -m "fix: fail-fast on unhandled IR nodes in rewriteRegisters"
 Create a single test file with a `runScript()` helper that drives the full pipeline and captures `print()` output.
 
 **Files:**
-- Create: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Create: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write the test file**
 
 ```kotlin
-package org.lectern.lang
+package org.quill.lang
 
-// Note: IrCompiler and VM are declared in `package org.lectern.lang` (despite living
+// Note: IrCompiler and VM are declared in `package org.quill.lang` (despite living
 // in the ast/ directory), so they are in the same package as this test — no import needed.
-import org.lectern.ast.AstLowerer
-import org.lectern.ast.ConstantFolder
-import org.lectern.ast.LivenessAnalyzer
-import org.lectern.ast.RegisterAllocator
-import org.lectern.rewrite
+import org.quill.ast.AstLowerer
+import org.quill.ast.ConstantFolder
+import org.quill.ast.LivenessAnalyzer
+import org.quill.ast.RegisterAllocator
+import org.quill.rewrite
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class LecternTest {
+class quillTest {
 
     private fun runScript(source: String): String {
         val tokens = tokenize(source)
@@ -150,14 +150,14 @@ class LecternTest {
 - [ ] **Step 2: Run the smoke test**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testSmokeTest"
+./gradlew test --tests "org.quill.lang.quillTest.testSmokeTest"
 ```
 Expected: PASS
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/test/kotlin/org/lectern/lang/LecternTest.kt
+git add src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "test: add end-to-end test infrastructure"
 ```
 
@@ -168,15 +168,15 @@ git commit -m "test: add end-to-end test infrastructure"
 **Syntax:** `condition ? thenExpr : elseExpr` — right-associative, no new opcodes.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Token.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Lexer.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Token.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Lexer.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write failing tests**
 
-Add to `LecternTest`:
+Add to `quillTest`:
 ```kotlin
 // ---- Ternary ----
 
@@ -203,7 +203,7 @@ fun testTernaryRightAssociative() {
 - [ ] **Step 2: Run to see tests fail**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testTernaryTrue"
+./gradlew test --tests "org.quill.lang.quillTest.testTernaryTrue"
 ```
 Expected: FAIL — parse error (QUESTION_MARK not a known token)
 
@@ -313,18 +313,18 @@ is Expr.TernaryExpr -> {
 - [ ] **Step 7: Run ternary tests**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testTernary*"
+./gradlew test --tests "org.quill.lang.quillTest.testTernary*"
 ```
 Expected: 3 PASS
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Token.kt \
-        src/main/kotlin/org/lectern/lang/Lexer.kt \
-        src/main/kotlin/org/lectern/lang/Parser.kt \
-        src/main/kotlin/org/lectern/ast/AstLowerer.kt \
-        src/test/kotlin/org/lectern/lang/LecternTest.kt
+git add src/main/kotlin/org/quill/lang/Token.kt \
+        src/main/kotlin/org/quill/lang/Lexer.kt \
+        src/main/kotlin/org/quill/lang/Parser.kt \
+        src/main/kotlin/org/quill/ast/AstLowerer.kt \
+        src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "feat: ternary expressions (condition ? then : else)"
 ```
 
@@ -335,19 +335,19 @@ git commit -m "feat: ternary expressions (condition ? then : else)"
 **Syntax:** `{ "key": value, ... }` — non-empty only. Map access uses `GET_INDEX`/`SET_INDEX`. No `GET_FIELD` for maps.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/IR.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/OpCode.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
-- Modify: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Modify: `src/main/kotlin/org/quill/lang/IR.kt`
+- Modify: `src/main/kotlin/org/quill/lang/OpCode.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
+- Modify: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write failing tests**
 
-Add to `LecternTest`:
+Add to `quillTest`:
 ```kotlin
 // ---- Maps ----
 
@@ -384,7 +384,7 @@ fun testMapMissingKeyReturnsNull() {
 - [ ] **Step 2: Run to see tests fail**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testMapLiteralGetIndex"
+./gradlew test --tests "org.quill.lang.quillTest.testMapLiteralGetIndex"
 ```
 Expected: FAIL — parse error (`{` not handled in prefix)
 
@@ -547,7 +547,7 @@ OpCode.SET_INDEX -> {
 - [ ] **Step 11: Run map tests**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testMap*"
+./gradlew test --tests "org.quill.lang.quillTest.testMap*"
 ```
 Expected: 3 PASS
 
@@ -561,15 +561,15 @@ Expected: All PASS
 - [ ] **Step 13: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/IR.kt \
-        src/main/kotlin/org/lectern/lang/OpCode.kt \
-        src/main/kotlin/org/lectern/lang/Parser.kt \
-        src/main/kotlin/org/lectern/ast/AstLowerer.kt \
-        src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-        src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt \
-        src/main/kotlin/org/lectern/ast/VM.kt \
-        src/main/kotlin/org/lectern/Main.kt \
-        src/test/kotlin/org/lectern/lang/LecternTest.kt
+git add src/main/kotlin/org/quill/lang/IR.kt \
+        src/main/kotlin/org/quill/lang/OpCode.kt \
+        src/main/kotlin/org/quill/lang/Parser.kt \
+        src/main/kotlin/org/quill/ast/AstLowerer.kt \
+        src/main/kotlin/org/quill/ast/IrCompiler.kt \
+        src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt \
+        src/main/kotlin/org/quill/ast/VM.kt \
+        src/main/kotlin/org/quill/Main.kt \
+        src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "feat: map literals and map indexing"
 ```
 
@@ -584,19 +584,19 @@ git commit -m "feat: map literals and map indexing"
 **Key design:** `ClassDescriptor` gets a `staticFields` body property (not a constructor param). Kotlin's `copy()` calls the constructor and re-runs class-body initializers, so each `copy()` gets a fresh `mutableMapOf()` — no shared state between copies.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/IR.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/OpCode.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
-- Modify: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/lang/IR.kt`
+- Modify: `src/main/kotlin/org/quill/lang/OpCode.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
+- Modify: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write failing tests**
 
-Add to `LecternTest`:
+Add to `quillTest`:
 ```kotlin
 // ---- Enums ----
 
@@ -625,7 +625,7 @@ fun testEnumIdentity() {
 - [ ] **Step 2: Run to see tests fail**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testEnumVariantAccess"
+./gradlew test --tests "org.quill.lang.quillTest.testEnumVariantAccess"
 ```
 Expected: FAIL — `EnumStmt` lowering is a TODO
 
@@ -751,7 +751,7 @@ OpCode.GET_FIELD -> {
 - [ ] **Step 11: Run enum tests**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testEnum*"
+./gradlew test --tests "org.quill.lang.quillTest.testEnum*"
 ```
 Expected: 2 PASS
 
@@ -765,15 +765,15 @@ Expected: All PASS
 - [ ] **Step 13: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Value.kt \
-        src/main/kotlin/org/lectern/lang/IR.kt \
-        src/main/kotlin/org/lectern/lang/OpCode.kt \
-        src/main/kotlin/org/lectern/ast/AstLowerer.kt \
-        src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-        src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt \
-        src/main/kotlin/org/lectern/ast/VM.kt \
-        src/main/kotlin/org/lectern/Main.kt \
-        src/test/kotlin/org/lectern/lang/LecternTest.kt
+git add src/main/kotlin/org/quill/lang/Value.kt \
+        src/main/kotlin/org/quill/lang/IR.kt \
+        src/main/kotlin/org/quill/lang/OpCode.kt \
+        src/main/kotlin/org/quill/ast/AstLowerer.kt \
+        src/main/kotlin/org/quill/ast/IrCompiler.kt \
+        src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt \
+        src/main/kotlin/org/quill/ast/VM.kt \
+        src/main/kotlin/org/quill/Main.kt \
+        src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "feat: enum declarations with static variant fields"
 ```
 
@@ -788,20 +788,20 @@ git commit -m "feat: enum declarations with static variant fields"
 **Key naming rule:** The field that holds a slot index into `frame.upvalues` is named `upvalueIdx` (not `idx`) to visually distinguish it from register fields. **`upvalueIdx` must NEVER be passed to `r()` in `rewriteRegisters`** — it is an ordinal, not a virtual register.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/IR.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/OpCode.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
-- Modify: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/lang/IR.kt`
+- Modify: `src/main/kotlin/org/quill/lang/OpCode.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
+- Modify: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write failing tests**
 
-Add to `LecternTest`:
+Add to `quillTest`:
 ```kotlin
 // ---- Lambdas / Closures ----
 
@@ -851,7 +851,7 @@ fun testLambdaMutatesCapture() {
 - [ ] **Step 2: Run to see tests fail**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testLambdaBasic"
+./gradlew test --tests "org.quill.lang.quillTest.testLambdaBasic"
 ```
 Expected: FAIL — `LambdaExpr` lowering is a TODO
 
@@ -1201,7 +1201,7 @@ is Value.Closure -> {
 - [ ] **Step 12: Run lambda tests**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testLambda*"
+./gradlew test --tests "org.quill.lang.quillTest.testLambda*"
 ```
 Expected: 4 PASS
 
@@ -1215,16 +1215,16 @@ Expected: All PASS
 - [ ] **Step 14: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/Value.kt \
-        src/main/kotlin/org/lectern/lang/IR.kt \
-        src/main/kotlin/org/lectern/lang/OpCode.kt \
-        src/main/kotlin/org/lectern/lang/Parser.kt \
-        src/main/kotlin/org/lectern/ast/AstLowerer.kt \
-        src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-        src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt \
-        src/main/kotlin/org/lectern/ast/VM.kt \
-        src/main/kotlin/org/lectern/Main.kt \
-        src/test/kotlin/org/lectern/lang/LecternTest.kt
+git add src/main/kotlin/org/quill/lang/Value.kt \
+        src/main/kotlin/org/quill/lang/IR.kt \
+        src/main/kotlin/org/quill/lang/OpCode.kt \
+        src/main/kotlin/org/quill/lang/Parser.kt \
+        src/main/kotlin/org/quill/ast/AstLowerer.kt \
+        src/main/kotlin/org/quill/ast/IrCompiler.kt \
+        src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt \
+        src/main/kotlin/org/quill/ast/VM.kt \
+        src/main/kotlin/org/quill/Main.kt \
+        src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "feat: lambdas and closures with upvalue capture"
 ```
 
@@ -1245,28 +1245,28 @@ The import system compiles and executes modules in isolated VMs, caches results,
 **AST change:** Replace identifier-based import syntax with string-path-based. The current `ImportStmt(namespace: Token)` and `ImportFromStmt(namespace: Token, tokens: List<Token>)` use identifier tokens. The new versions use a string path token.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/AST.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Value.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/IR.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/OpCode.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
-- Modify: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Modify: `src/main/kotlin/org/quill/lang/AST.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Value.kt`
+- Modify: `src/main/kotlin/org/quill/lang/IR.kt`
+- Modify: `src/main/kotlin/org/quill/lang/OpCode.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
+- Modify: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write failing tests**
 
-Add to `LecternTest`:
+Add to `quillTest`:
 ```kotlin
 // ---- Imports ----
 
 @Test
 fun testImportModule() {
     // Write a small module file to disk, then import it
-    val moduleFile = java.io.File("test_module_import.lec")
+    val moduleFile = java.io.File("test_module_import.quill")
     moduleFile.writeText("""
         fn greet(name) { return "Hello, " + name }
     """.trimIndent())
@@ -1283,7 +1283,7 @@ fun testImportModule() {
 
 @Test
 fun testFromImport() {
-    val moduleFile = java.io.File("test_module_from.lec")
+    val moduleFile = java.io.File("test_module_from.quill")
     moduleFile.writeText("""fn double(n) { return n * 2 }""")
     try {
         val result = runScript("""
@@ -1300,7 +1300,7 @@ fun testFromImport() {
 - [ ] **Step 2: Run to see tests fail**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testImportModule"
+./gradlew test --tests "org.quill.lang.quillTest.testImportModule"
 ```
 Expected: FAIL — `ImportStmt` lowering is a TODO
 
@@ -1437,14 +1437,14 @@ OpCode.IMPORT -> {
     val module = moduleCache[path] ?: run {
         if (path in modulesInProgress) error("Circular import detected: $path")
         modulesInProgress.add(path)
-        val source = java.io.File("$path.lec").readText()
+        val source = java.io.File("$path.quill").readText()
         val tokens = tokenize(source)
         val stmts = Parser(tokens).parse()
-        val folded = stmts.map { org.lectern.ast.ConstantFolder().foldStmt(it) }
-        val result = org.lectern.ast.AstLowerer().lower(folded)
-        val ranges = org.lectern.ast.LivenessAnalyzer().analyze(result.instrs)
-        val allocation = org.lectern.ast.RegisterAllocator().allocate(ranges)
-        val rewritten = org.lectern.rewrite(result.instrs, allocation)
+        val folded = stmts.map { org.quill.ast.ConstantFolder().foldStmt(it) }
+        val result = org.quill.ast.AstLowerer().lower(folded)
+        val ranges = org.quill.ast.LivenessAnalyzer().analyze(result.instrs)
+        val allocation = org.quill.ast.RegisterAllocator().allocate(ranges)
+        val rewritten = org.quill.rewrite(result.instrs, allocation)
         val chunk = IrCompiler().compile(AstLowerer.LoweredResult(rewritten, result.constants))
         val moduleVm = VM()
         // Share builtins with the module VM
@@ -1494,20 +1494,20 @@ OpCode.GET_FIELD -> {
 }
 ```
 
-The `IMPORT` handler uses classes from other packages. Add any missing imports at the top of `VM.kt`. Note that `IrCompiler` and `VM` are already in `package org.lectern.lang` (same package as `VM.kt`), so no import is needed for `IrCompiler`. The ones that do need importing (if not already present):
+The `IMPORT` handler uses classes from other packages. Add any missing imports at the top of `VM.kt`. Note that `IrCompiler` and `VM` are already in `package org.quill.lang` (same package as `VM.kt`), so no import is needed for `IrCompiler`. The ones that do need importing (if not already present):
 ```kotlin
-import org.lectern.ast.AstLowerer
-import org.lectern.ast.ConstantFolder
-import org.lectern.ast.LivenessAnalyzer
-import org.lectern.ast.RegisterAllocator
-import org.lectern.rewrite
-// Parser and tokenize are in org.lectern.lang — same package, no import needed
+import org.quill.ast.AstLowerer
+import org.quill.ast.ConstantFolder
+import org.quill.ast.LivenessAnalyzer
+import org.quill.ast.RegisterAllocator
+import org.quill.rewrite
+// Parser and tokenize are in org.quill.lang — same package, no import needed
 ```
 
 - [ ] **Step 13: Run import tests**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testImport*"
+./gradlew test --tests "org.quill.lang.quillTest.testImport*"
 ```
 Expected: 2 PASS
 
@@ -1521,17 +1521,17 @@ Expected: All PASS
 - [ ] **Step 15: Commit**
 
 ```bash
-git add src/main/kotlin/org/lectern/lang/AST.kt \
-        src/main/kotlin/org/lectern/lang/Value.kt \
-        src/main/kotlin/org/lectern/lang/IR.kt \
-        src/main/kotlin/org/lectern/lang/OpCode.kt \
-        src/main/kotlin/org/lectern/lang/Parser.kt \
-        src/main/kotlin/org/lectern/ast/AstLowerer.kt \
-        src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-        src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt \
-        src/main/kotlin/org/lectern/ast/VM.kt \
-        src/main/kotlin/org/lectern/Main.kt \
-        src/test/kotlin/org/lectern/lang/LecternTest.kt
+git add src/main/kotlin/org/quill/lang/AST.kt \
+        src/main/kotlin/org/quill/lang/Value.kt \
+        src/main/kotlin/org/quill/lang/IR.kt \
+        src/main/kotlin/org/quill/lang/OpCode.kt \
+        src/main/kotlin/org/quill/lang/Parser.kt \
+        src/main/kotlin/org/quill/ast/AstLowerer.kt \
+        src/main/kotlin/org/quill/ast/IrCompiler.kt \
+        src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt \
+        src/main/kotlin/org/quill/ast/VM.kt \
+        src/main/kotlin/org/quill/Main.kt \
+        src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "feat: import system with module cache and circular import detection"
 ```
 
@@ -1550,24 +1550,24 @@ config "settings.yml" {
 Reads/writes a YAML or JSON config file. Fields are extracted into local variables. Absent file is created with defaults.
 
 **Files:**
-- Modify: `src/main/kotlin/org/lectern/lang/Token.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Lexer.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/AST.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Parser.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/Chunk.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/IR.kt`
-- Modify: `src/main/kotlin/org/lectern/lang/OpCode.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/AstLowerer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/IrCompiler.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt`
-- Modify: `src/main/kotlin/org/lectern/ast/VM.kt`
-- Modify: `src/main/kotlin/org/lectern/Main.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Token.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Lexer.kt`
+- Modify: `src/main/kotlin/org/quill/lang/AST.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Parser.kt`
+- Modify: `src/main/kotlin/org/quill/lang/Chunk.kt`
+- Modify: `src/main/kotlin/org/quill/lang/IR.kt`
+- Modify: `src/main/kotlin/org/quill/lang/OpCode.kt`
+- Modify: `src/main/kotlin/org/quill/ast/AstLowerer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/IrCompiler.kt`
+- Modify: `src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt`
+- Modify: `src/main/kotlin/org/quill/ast/VM.kt`
+- Modify: `src/main/kotlin/org/quill/Main.kt`
 - Modify: `build.gradle.kts`
-- Modify: `src/test/kotlin/org/lectern/lang/LecternTest.kt`
+- Modify: `src/test/kotlin/org/quill/lang/quillTest.kt`
 
 - [ ] **Step 1: Write failing tests**
 
-Add to `LecternTest`:
+Add to `quillTest`:
 ```kotlin
 // ---- Config ----
 
@@ -1614,7 +1614,7 @@ fun testConfigReadsExistingFile() {
 - [ ] **Step 2: Run to see tests fail**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testConfigCreatesFileWithDefaults"
+./gradlew test --tests "org.quill.lang.quillTest.testConfigCreatesFileWithDefaults"
 ```
 Expected: FAIL — `KW_CONFIG` not a known token
 
@@ -1904,7 +1904,7 @@ OpCode.LOAD_CONFIG -> {
 - [ ] **Step 16: Run config tests**
 
 ```bash
-./gradlew test --tests "org.lectern.lang.LecternTest.testConfig*"
+./gradlew test --tests "org.quill.lang.quillTest.testConfig*"
 ```
 Expected: 2 PASS
 
@@ -1919,19 +1919,19 @@ Expected: All PASS
 
 ```bash
 git add build.gradle.kts \
-        src/main/kotlin/org/lectern/lang/Token.kt \
-        src/main/kotlin/org/lectern/lang/Lexer.kt \
-        src/main/kotlin/org/lectern/lang/AST.kt \
-        src/main/kotlin/org/lectern/lang/Parser.kt \
-        src/main/kotlin/org/lectern/lang/Chunk.kt \
-        src/main/kotlin/org/lectern/lang/IR.kt \
-        src/main/kotlin/org/lectern/lang/OpCode.kt \
-        src/main/kotlin/org/lectern/ast/AstLowerer.kt \
-        src/main/kotlin/org/lectern/ast/IrCompiler.kt \
-        src/main/kotlin/org/lectern/ast/LivenessAnalyzer.kt \
-        src/main/kotlin/org/lectern/ast/VM.kt \
-        src/main/kotlin/org/lectern/Main.kt \
-        src/test/kotlin/org/lectern/lang/LecternTest.kt
+        src/main/kotlin/org/quill/lang/Token.kt \
+        src/main/kotlin/org/quill/lang/Lexer.kt \
+        src/main/kotlin/org/quill/lang/AST.kt \
+        src/main/kotlin/org/quill/lang/Parser.kt \
+        src/main/kotlin/org/quill/lang/Chunk.kt \
+        src/main/kotlin/org/quill/lang/IR.kt \
+        src/main/kotlin/org/quill/lang/OpCode.kt \
+        src/main/kotlin/org/quill/ast/AstLowerer.kt \
+        src/main/kotlin/org/quill/ast/IrCompiler.kt \
+        src/main/kotlin/org/quill/ast/LivenessAnalyzer.kt \
+        src/main/kotlin/org/quill/ast/VM.kt \
+        src/main/kotlin/org/quill/Main.kt \
+        src/test/kotlin/org/quill/lang/quillTest.kt
 git commit -m "feat: config blocks with YAML/JSON file I/O"
 ```
 

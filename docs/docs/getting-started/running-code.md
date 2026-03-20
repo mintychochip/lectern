@@ -2,16 +2,16 @@
 sidebar_position: 3
 ---
 
-# Running Lectern Code
+# Running quill Code
 
-Learn different ways to run your Lectern programs.
+Learn different ways to run your quill programs.
 
 ## Using Gradle
 
-The standard way to run Lectern programs:
+The standard way to run quill programs:
 
 ```bash
-./gradlew run --args="filename.lectern"
+./gradlew run --args="filename.quill"
 ```
 
 ## Running Multiple Files
@@ -19,7 +19,7 @@ The standard way to run Lectern programs:
 You can pass multiple files:
 
 ```bash
-./gradlew run --args="mlectern.lectern utils.lectern"
+./gradlew run --args="mquill.quill utils.quill"
 ```
 
 ## Common Run Options
@@ -29,7 +29,7 @@ You can pass multiple files:
 For debugging output:
 
 ```bash
-./gradlew run --args="--debug filename.lectern"
+./gradlew run --args="--debug filename.quill"
 ```
 
 ### Help
@@ -42,7 +42,7 @@ View available options:
 
 ## REPL (Coming Soon)
 
-Lectern will soon support an interactive REPL:
+quill will soon support an interactive REPL:
 
 ```bash
 ./gradlew run --args="--repl"

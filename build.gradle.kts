@@ -3,11 +3,11 @@ plugins {
     application
 }
 
-group = "org.lectern"
+group = "org.quill"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("org.lectern.MainKt")
+    mainClass.set("org.quill.MainKt")
 }
 
 repositories {

@@ -4,13 +4,13 @@ sidebar_position: 4
 
 # Control Flow
 
-Control the flow of execution in your Lectern programs.
+Control the flow of execution in your quill programs.
 
 ## If Statements
 
 Execute code conditionally:
 
-```lectern
+```quill
 let score = 85
 
 if score >= 90 {
@@ -28,7 +28,7 @@ if score >= 90 {
 
 Repeat code while a condition is true:
 
-```lectern
+```quill
 let count = 0
 
 while count < 5 {
@@ -44,7 +44,7 @@ Iterate over ranges or collections:
 
 ### Range Iteration
 
-```lectern
+```quill
 for i in 0..5 {
     print(i)
 }
@@ -53,7 +53,7 @@ for i in 0..5 {
 
 ### Array Iteration
 
-```lectern
+```quill
 let fruits = ["apple", "banana", "cherry"]
 
 for fruit in fruits {
@@ -64,7 +64,7 @@ for fruit in fruits {
 
 ### Index-Based Iteration
 
-```lectern
+```quill
 let items = [10, 20, 30]
 
 for i in 0..len(items) {
@@ -76,7 +76,7 @@ for i in 0..len(items) {
 
 Control loop execution:
 
-```lectern
+```quill
 // Break - exit the loop early
 let i = 0
 while true {
@@ -100,7 +100,7 @@ for i in 0..10 {
 
 Combine control structures:
 
-```lectern
+```quill
 for i in 0..3 {
     for j in 0..3 {
         if i == j {

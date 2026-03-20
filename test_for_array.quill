@@ -1,0 +1,4 @@
+let arr = [10, 20, 30];
+for i in 0..3 {
+    print(arr[i]);
+}

@@ -1,0 +1,11 @@
+// Class definition
+
+class ${NAME} {
+    fn init() {
+        // Constructor logic
+    }
+
+    fn toString() {
+        return "${NAME}"
+    }
+}

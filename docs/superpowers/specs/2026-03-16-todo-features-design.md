@@ -1,4 +1,4 @@
-# Lectern TODO Features Design Spec
+# quill TODO Features Design Spec
 
 **Date:** 2026-03-16
 **Scope:** Implement 7 unfinished language features: Ternary, Map, Lambda, Enum, Table, Config, Import
@@ -263,7 +263,7 @@ import spawn from arena   // direct: spawn()
 ### AstLowerer + VM/Runtime
 
 **`import utils`:**
-1. Resolve `utils.lec` relative to current script
+1. Resolve `utils.quill` relative to current script
 2. Lex, parse, lower, compile the module into its own chunk
 3. Execute the chunk
 4. Capture module's globals into a namespace instance
@@ -283,7 +283,7 @@ import spawn from arena   // direct: spawn()
 
 ### Circular imports
 - Maintain a set of currently-loading file paths throughout the compilation pipeline
-- If a file is encountered that's already in the set, throw a clear error: "Circular import detected: a.lec -> b.lec -> a.lec"
+- If a file is encountered that's already in the set, throw a clear error: "Circular import detected: a.quill -> b.quill -> a.quill"
 
 ### New IR/Opcodes: None
 

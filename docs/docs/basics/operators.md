@@ -4,11 +4,11 @@ sidebar_position: 3
 
 # Operators
 
-Learn the operators available in Lectern.
+Learn the operators available in quill.
 
 ## Arithmetic Operators
 
-```lectern
+```quill
 let a = 10
 let b = 3
 
@@ -16,12 +16,12 @@ print(a + b)   // 13 (addition)
 print(a - b)   // 7  (subtraction)
 print(a * b)   // 30 (multiplication)
 print(a / b)   // 3.33... (division)
-print(a % b)   // 1  (modulo/remlecternder)
+print(a % b)   // 1  (modulo/remquillder)
 ```
 
 ## Comparison Operators
 
-```lectern
+```quill
 let x = 5
 let y = 10
 
@@ -35,7 +35,7 @@ print(x >= y)  // false (greater or equal)
 
 ## Logical Operators
 
-```lectern
+```quill
 let a = true
 let b = false
 
@@ -46,7 +46,7 @@ print(!a)      // false (not)
 
 ## String Operators
 
-```lectern
+```quill
 let first = "Hello"
 let last = "World"
 
@@ -57,7 +57,7 @@ print(full)  // "Hello World"
 
 ## Assignment Operators
 
-```lectern
+```quill
 let count = 0
 
 count = 5      // Simple assignment
@@ -79,7 +79,7 @@ Operators are evaluated in this order (highest to lowest):
 
 Use parentheses to control order:
 
-```lectern
+```quill
 let result = (2 + 3) * 4  // 20
 let other = 2 + 3 * 4     // 14
 ```
