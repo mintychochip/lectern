@@ -1,5 +1,6 @@
 package org.quill.lang
 
+import org.quill.QuillContext
 import org.quill.lang.Value.*
 
 fun valueToString(v: Value): String = when (v) {
@@ -16,14 +17,30 @@ fun valueToString(v: Value): String = when (v) {
     else -> v.toString()
 }
 
-class VM {
+class VM(val context: QuillContext? = null) {
+
     val globals = mutableMapOf<String, Value>(
         "Array" to Value.Class(Builtins.ArrayClass),
         "Map" to Value.Class(Builtins.MapClass),
         "EnumValue" to Value.Class(Builtins.EnumValueClass),
         "EnumNamespace" to Value.Class(Builtins.EnumNamespaceClass),
-        // log and print are provided by QuillContext at runtime
     )
+
+    /** Maximum instructions per script execution. Configurable. */
+    var instructionLimit: Long = 10_000_000L
+
+    init {
+        context?.let { ctx ->
+            globals["log"] = Value.NativeFunction { args ->
+                ctx.log(args.joinToString(" ") { it.toString() })
+                Value.Null
+            }
+            globals["print"] = Value.NativeFunction { args ->
+                ctx.print(args.joinToString(" ") { valueToString(it) })
+                Value.Null
+            }
+        }
+    }
 
     data class CallFrame(
         val chunk: Chunk,
@@ -36,10 +53,17 @@ class VM {
     }
 
     fun execute(chunk: Chunk) {
+        var instructionCount = 0L
+        val limit = instructionLimit
         val frames = ArrayDeque<CallFrame>()
         frames.addLast(CallFrame(chunk))
 
         while (frames.isNotEmpty()) {
+            // Check instruction limit before each instruction
+            if (instructionCount++ >= limit) {
+                error("Script execution timed out (> $limit instructions)")
+            }
+
             val frame = frames.last()
             if (frame.ip >= frame.chunk.code.size) {
                 frames.removeLast()
