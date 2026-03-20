@@ -77,6 +77,80 @@ sealed class Value {
     }
 }
 
+// === String method helpers ===
+
+private fun expectString(v: Value): String = (v as? Value.String)?.value
+    ?: error("Expected string, got $v")
+
+private fun expectInt(v: Value): Int = (v as? Value.Int)?.value
+    ?: error("Expected int, got $v")
+
+private fun stringSplit(self: String, delim: String?): Value.Instance {
+    val parts = if (delim == null || delim.isEmpty()) {
+        self.map { it.toString() }
+    } else {
+        self.split(delim)
+    }
+    return Builtins.newArray(parts.map { Value.String(it) }.toMutableList())
+}
+
+fun getStringMethod(self: Value.String, name: String): Value? {
+    return when (name) {
+        "split" -> Value.NativeFunction { args ->
+            stringSplit(self.value, args.getOrNull(0)?.let { expectString(it) })
+        }
+        "trim" -> Value.NativeFunction { _ ->
+            Value.String(self.value.trim())
+        }
+        "contains" -> Value.NativeFunction { args ->
+            Value.Boolean(self.value.contains(expectString(args[0])))
+        }
+        "replace" -> Value.NativeFunction { args ->
+            Value.String(self.value.replace(expectString(args[0]), expectString(args[1]), false))
+        }
+        "replaceAll" -> Value.NativeFunction { args ->
+            Value.String(self.value.replace(expectString(args[0]), expectString(args[1]), true))
+        }
+        "toUpperCase" -> Value.NativeFunction { _ ->
+            Value.String(self.value.uppercase())
+        }
+        "toLowerCase" -> Value.NativeFunction { _ ->
+            Value.String(self.value.lowercase())
+        }
+        "startsWith" -> Value.NativeFunction { args ->
+            Value.Boolean(self.value.startsWith(expectString(args[0])))
+        }
+        "endsWith" -> Value.NativeFunction { args ->
+            Value.Boolean(self.value.endsWith(expectString(args[0])))
+        }
+        "indexOf" -> Value.NativeFunction { args ->
+            Value.Int(self.value.indexOf(expectString(args[0])).also { if (it < 0) return@NativeFunction Value.Int(-1) })
+        }
+        "length" -> Value.NativeFunction { _ ->
+            Value.Int(self.value.length)
+        }
+        "isEmpty" -> Value.NativeFunction { _ ->
+            if (self.value.isEmpty()) Value.Boolean.TRUE else Value.Boolean.FALSE
+        }
+        "isBlank" -> Value.NativeFunction { _ ->
+            if (self.value.isBlank()) Value.Boolean.TRUE else Value.Boolean.FALSE
+        }
+        "chars" -> Value.NativeFunction { _ ->
+            Builtins.newArray(self.value.map { Value.String(it.toString()) }.toMutableList())
+        }
+        "get" -> Value.NativeFunction { args ->
+            val idx = expectInt(args[0])
+            if (idx >= 0 && idx < self.value.length) {
+                Value.String(self.value[idx].toString())
+            } else {
+                // TODO: throw StringIndexOutOfBoundsError instead of returning null
+                Value.Null
+            }
+        }
+        else -> null
+    }
+}
+
 object Builtins {
     val RangeClass = ClassDescriptor(
         name = "Range",
