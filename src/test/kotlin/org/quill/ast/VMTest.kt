@@ -582,7 +582,11 @@ class VMTest {
     fun testHasBasic() {
         val output = compileAndRun(
             """
-            class Foo { init() { this.x = 1 } }
+            class Foo {
+                fn init() {
+                    self.x = 1
+                }
+            }
             let f = Foo()
             print(f has "x")
             print(f has "y")
@@ -605,12 +609,15 @@ class VMTest {
 
     @Test
     fun testHasDynamicField() {
-        // Dynamic field name via variable — only works if field is a string literal
+        // Field name is a string literal — only works if field is a string literal
         val output = compileAndRun(
             """
-            class Foo { init() { this.name = "Bob" } }
+            class Foo {
+                fn init() {
+                    self.name = "Bob"
+                }
+            }
             let f = Foo()
-            let field = "name"
             print(f has "name")
             """.trimIndent()
         )

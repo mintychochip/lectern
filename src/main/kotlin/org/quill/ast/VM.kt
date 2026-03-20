@@ -262,9 +262,11 @@ class VM {
                     frame.regs[dst] = if (result) Value.Boolean.TRUE else Value.Boolean.FALSE
                 }
                 OpCode.HAS -> {
-                    val obj = frame.regs[src1] ?: error("Cannot has on null")
+                    val obj = frame.regs[src1]
                     val fieldName = frame.chunk.strings[imm]
-                    val result = when (obj) {
+                    val result = if (obj == null) {
+                        Value.Boolean(false)
+                    } else when (obj) {
                         is Value.Instance -> {
                             if (obj.clazz == Builtins.MapClass) {
                                 // Map: check __entries InternalMap
@@ -497,9 +499,11 @@ class VM {
                 OpCode.SPILL   -> frame.spills[imm] = frame.regs[src1]
                 OpCode.UNSPILL -> frame.regs[dst] = frame.spills[imm]!!
                 OpCode.HAS -> {
-                    val obj = frame.regs[src1] ?: error("Cannot has on null")
+                    val obj = frame.regs[src1]
                     val fieldName = frame.chunk.strings[imm]
-                    val result = when (obj) {
+                    val result = if (obj == null) {
+                        Value.Boolean(false)
+                    } else when (obj) {
                         is Value.Instance -> {
                             if (obj.clazz == Builtins.MapClass) {
                                 // Map: check __entries InternalMap
