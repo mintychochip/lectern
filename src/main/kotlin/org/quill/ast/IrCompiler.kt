@@ -5,6 +5,7 @@ import org.quill.ast.LivenessAnalyzer
 import org.quill.ast.RegisterAllocator
 import org.quill.ast.SpillInserter
 import org.quill.opt.OptimizationPipeline
+import org.quill.opt.passes.InductionVariablePass
 import org.quill.opt.passes.ConstantFoldingPass
 import org.quill.opt.passes.CopyPropagationPass
 import org.quill.opt.passes.DeadCodeEliminationPass
@@ -33,7 +34,8 @@ class IrCompiler {
                 SsaDeadCodeEliminationPass()
             ),
             preSsaPasses = listOf(
-                ConstantFoldingPass()
+                ConstantFoldingPass(),
+                InductionVariablePass()
             ),
             postSsaPasses = listOf(
                 DeadCodeEliminationPass(),

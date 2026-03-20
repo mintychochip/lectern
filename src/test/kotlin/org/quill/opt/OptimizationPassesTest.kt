@@ -7,6 +7,7 @@ import org.quill.lang.Value
 import org.quill.opt.passes.ConstantFoldingPass
 import org.quill.opt.passes.CopyPropagationPass
 import org.quill.opt.passes.DeadCodeEliminationPass
+import org.quill.opt.passes.InductionVariablePass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -276,5 +277,90 @@ class OptimizationPassesTest {
 
         println("Division by zero (not folded):")
         result.instrs.forEach { println("  $it") }
+    }
+
+    /**
+     * Test: Induction variable pass detects Range loop pattern and transforms it.
+     *
+     * This test creates a simple Range for loop IR:
+     *   for i in 0..5 { print(i) }
+     *
+     * The pass should recognize the iterator pattern and replace it with
+     * direct arithmetic (valueReg = start; if valueReg > end goto end; body; valueReg = valueReg + 1).
+     */
+    @Test
+    fun testInductionVariableRangeLoop() {
+        labelCounter = 0
+        val constants = mutableListOf(
+            Value.Int(0),    // index 0: start = 0
+            Value.Int(5),    // index 1: end = 5
+            Value.String("body")  // index 2: placeholder
+        )
+
+        val topLabel = IrLabel(0)
+        val endLabel = IrLabel(1)
+
+        // IR for "for i in 0..5 { print(i) }" using Range iterator pattern:
+        //   r0 = LoadImm #0        ; r0 = 0 (start)
+        //   r1 = LoadImm #1        ; r1 = 5 (end)
+        //   r2 = BinaryOp(DOT_DOT) r0, r1  ; r2 = Range(0, 5)
+        //   r3 = GetField r2, "iter"       ; r3 = r2.iter
+        //   r4 = Call r3, []       ; r4 = r3()
+        //   Label loopHeader
+        //   r5 = GetField r4, "hasNext"   ; r5 = r4.hasNext
+        //   r6 = Call r5, []       ; r6 = r5()
+        //   JumpIfFalse r6, endLabel
+        //   r7 = GetField r4, "next"       ; r7 = r4.next
+        //   r8 = Call r7, []       ; r8 = r7()
+        //   ; body would use r8 here
+        //   Jump loopHeader
+        //   Label endLabel
+        //   Return r8
+
+        val instrs = listOf(
+            IrInstr.LoadImm(0, 0),                        // r0 = 0
+            IrInstr.LoadImm(1, 1),                        // r1 = 5
+            IrInstr.BinaryOp(2, TokenType.DOT_DOT, 0, 1), // r2 = Range(0, 5)
+            IrInstr.GetField(3, 2, "iter"),               // r3 = r2.iter
+            IrInstr.Call(4, 3, listOf()),                // r4 = r3()
+            IrInstr.Label(topLabel),                      // loopHeader:
+            IrInstr.GetField(5, 4, "hasNext"),           // r5 = r4.hasNext
+            IrInstr.Call(6, 5, listOf()),                // r6 = r5()
+            IrInstr.JumpIfFalse(6, endLabel),             // if !r6 goto endLabel
+            IrInstr.GetField(7, 4, "next"),              // r7 = r4.next
+            IrInstr.Call(8, 7, listOf()),                // r8 = r7()
+            // Body placeholder (r8 would be used here)
+            IrInstr.LoadImm(9, 2),                       // r9 = "body" placeholder
+            IrInstr.Jump(topLabel),                      // goto loopHeader
+            IrInstr.Label(endLabel),                     // endLabel:
+            IrInstr.Return(8)
+        )
+
+        val cfg = org.quill.ast.ControlFlowGraph.build(instrs)
+        val pass = InductionVariablePass()
+        val result = pass.run(instrs, cfg, constants)
+
+        println("Induction variable pass result:")
+        result.instrs.forEachIndexed { idx, instr -> println("  $idx: $instr") }
+
+        // After transformation, the following should be true:
+        // 1. No GetField("next") or GetField("hasNext") or GetField("iter") instructions
+        // 2. The iterator GetField and Call should be removed
+        // 3. The JumpIfFalse should be replaced with GT comparison
+
+        val hasIterGet = result.instrs.any { it is IrInstr.GetField && it.name == "iter" }
+        val hasHasNextGet = result.instrs.any { it is IrInstr.GetField && it.name == "hasNext" }
+        val hasNextGet = result.instrs.any { it is IrInstr.GetField && it.name == "next" }
+
+        println("Has iter GetField: $hasIterGet (should be false)")
+        println("Has hasNext GetField: $hasHasNextGet (should be false)")
+        println("Has next GetField: $hasNextGet (should be false)")
+
+        assertFalse(hasIterGet, "Iterator GetField should be removed")
+        assertFalse(hasHasNextGet, "hasNext GetField should be removed")
+        assertFalse(hasNextGet, "next GetField should be removed")
+
+        // The pass should have reported changes
+        println("Pass reported changed: ${result.changed}")
     }
 }
