@@ -29,6 +29,7 @@ enum class TokenType {
     KW_IMPORT,
     KW_FROM,
     KW_IS,
+    KW_HAS,
     KW_TABLE,
     KW_KEY,
     KW_CONFIG,
