@@ -22,11 +22,6 @@ import org.quill.opt.OptResult
  * - x + 0  -> x           (identity)
  * - x - 0  -> x           (identity)
  * - x - x  -> 0           (constant)
- * - x ^ 0  -> x           (identity)
- * - x ^ x  -> 0           (constant)
- * - x & 0  -> 0           (constant)
- * - x & -1 -> x           (identity)
- * - x | 0  -> x           (identity)
  */
 class StrengthReductionPass : OptPass {
     override val name = "StrengthReduction"
@@ -72,50 +67,44 @@ class StrengthReductionPass : OptPass {
         regConstants: MutableMap<Int, Value>,
         constants: List<Value>
     ) {
+        val dst: Int? = when (instr) {
+            is IrInstr.LoadImm -> instr.dst
+            is IrInstr.Move -> instr.dst
+            is IrInstr.BinaryOp -> instr.dst
+            is IrInstr.UnaryOp -> instr.dst
+            is IrInstr.LoadGlobal -> instr.dst
+            is IrInstr.LoadFunc -> instr.dst
+            is IrInstr.LoadClass -> instr.dst
+            is IrInstr.Call -> instr.dst
+            is IrInstr.NewArray -> instr.dst
+            is IrInstr.NewInstance -> instr.dst
+            is IrInstr.GetIndex -> instr.dst
+            is IrInstr.GetField -> instr.dst
+            is IrInstr.IsType -> instr.dst
+            is IrInstr.Unspill -> instr.dst
+            else -> null
+        }
+
+        if (dst == null) return
+
         when (instr) {
             is IrInstr.LoadImm -> {
                 if (instr.index < constants.size) {
-                    regConstants[instr.dst] = constants[instr.index]
+                    regConstants[dst] = constants[instr.index]
                 } else {
-                    regConstants.remove(instr.dst)
+                    regConstants.remove(dst)
                 }
             }
             is IrInstr.Move -> {
                 val srcConst = regConstants[instr.src]
                 if (srcConst != null) {
-                    regConstants[instr.dst] = srcConst
+                    regConstants[dst] = srcConst
                 } else {
-                    regConstants.remove(instr.dst)
+                    regConstants.remove(dst)
                 }
-            }
-            is IrInstr.BinaryOp -> {
-                val leftConst = regConstants[instr.src1]
-                val rightConst = regConstants[instr.src2]
-                if (leftConst != null && rightConst != null) {
-                    // Both operands are constants - will be folded by ConstantFoldingPass
-                    regConstants.remove(instr.dst)
-                } else {
-                    regConstants.remove(instr.dst)
-                }
-            }
-            is IrInstr.UnaryOp -> {
-                val srcConst = regConstants[instr.src]
-                if (srcConst != null) {
-                    regConstants.remove(instr.dst)
-                } else {
-                    regConstants.remove(instr.dst)
-                }
-            }
-            is IrInstr.LoadGlobal, is IrInstr.LoadFunc, is IrInstr.LoadClass,
-            is IrInstr.Call, is IrInstr.NewArray, is IrInstr.NewInstance,
-            is IrInstr.GetIndex, is IrInstr.GetField -> {
-                regConstants.remove(instr.dst)
             }
             else -> {
-                // For instructions we don't track, remove any constant status
-                if (instr is IrInstr && instr.dst != null) {
-                    regConstants.remove(instr.dst)
-                }
+                regConstants.remove(dst)
             }
         }
     }
@@ -213,57 +202,6 @@ class StrengthReductionPass : OptPass {
                 null
             }
 
-            // XOR optimizations
-            TokenType.CIRCUMFLEX -> {
-                // x ^ 0 -> x
-                if (isZero(rightConst)) {
-                    return IrInstr.Move(instr.dst, instr.src1)
-                }
-                if (isZero(leftConst)) {
-                    return IrInstr.Move(instr.dst, instr.src2)
-                }
-                // x ^ x -> 0
-                if (instr.src1 == instr.src2) {
-                    val zeroIdx = addConstant(Value.Int(0))
-                    return IrInstr.LoadImm(instr.dst, zeroIdx)
-                }
-                null
-            }
-
-            // AND optimizations
-            TokenType.AMPERSAND -> {
-                // x & 0 -> 0
-                if (isZero(rightConst) || isZero(leftConst)) {
-                    val zeroIdx = addConstant(Value.Int(0))
-                    return IrInstr.LoadImm(instr.dst, zeroIdx)
-                }
-                // x & -1 -> x (all bits set)
-                if (isMinusOne(rightConst)) {
-                    return IrInstr.Move(instr.dst, instr.src1)
-                }
-                if (isMinusOne(leftConst)) {
-                    return IrInstr.Move(instr.dst, instr.src2)
-                }
-                null
-            }
-
-            // OR optimizations
-            TokenType.PIPE -> {
-                // x | 0 -> x
-                if (isZero(rightConst)) {
-                    return IrInstr.Move(instr.dst, instr.src1)
-                }
-                if (isZero(leftConst)) {
-                    return IrInstr.Move(instr.dst, instr.src2)
-                }
-                // x | -1 -> -1 (all ones)
-                if (isMinusOne(rightConst) || isMinusOne(leftConst)) {
-                    val minusOneIdx = addConstant(Value.Int(-1))
-                    return IrInstr.LoadImm(instr.dst, minusOneIdx)
-                }
-                null
-            }
-
             else -> null
         }
     }
@@ -271,5 +209,4 @@ class StrengthReductionPass : OptPass {
     private fun isZero(v: Value?): Boolean = v is Value.Int && v.value == 0
     private fun isOne(v: Value?): Boolean = v is Value.Int && v.value == 1
     private fun isTwo(v: Value?): Boolean = v is Value.Int && v.value == 2
-    private fun isMinusOne(v: Value?): Boolean = v is Value.Int && v.value == -1
 }
