@@ -4,7 +4,7 @@
 
 **Goal:** Implement the `has` operator — `expr has expr` — which checks if an object or map has a named field, returning `true`/`false`.
 
-**Architecture:** `has` is a prefix binary operator parsed at precedence 45 (between `==`/`!=` at 40 and `<`/`>` at 50). It lowers to a new `HasCheck(dst, obj, fieldReg)` IR instruction, compiled to a new `HAS(0x29)` opcode. The VM dispatches it and checks own-instance fields or map entries. No inheritance walk.
+**Architecture:** `has` is a binary infix operator parsed at precedence 45 (between `==`/`!=` at 40 and `<`/`>` at 50). It lowers to a new `HasCheck(dst, obj, fieldName: String)` IR instruction (field name is a compile-time string constant), compiled to a new `HAS(0x29)` opcode. The VM dispatches it and checks own-instance fields or map entries via `__entries`. No inheritance walk.
 
 **Tech Stack:** Kotlin 2.2.21, JVM 21, kotlin.test, Gradle (`./gradlew test`)
 
@@ -20,8 +20,8 @@
 | `src/main/kotlin/org/quill/lang/Token.kt` | Add `KW_HAS` to `TokenType` enum |
 | `src/main/kotlin/org/quill/lang/Lexer.kt` | Add `"has" to TokenType.KW_HAS` to `keywords` map |
 | `src/main/kotlin/org/quill/lang/AST.kt` | Add `HasExpr(target: Expr, field: Expr)` to `Expr` sealed class |
-| `src/main/kotlin/org/quill/lang/Parser.kt` | Add `TokenType.KW_HAS to 45` in `weights`; add `TokenType.KW_HAS` case to `parsePrefix()` |
-| `src/main/kotlin/org/quill/lang/IR.kt` | Add `HasCheck(dst: Int, obj: Int, field: Int)` data class |
+| `src/main/kotlin/org/quill/lang/Parser.kt` | Add `TokenType.KW_HAS to 45` in `weights`; add `has` handling in `parseExpression()` infix loop (after `is` check) |
+| `src/main/kotlin/org/quill/lang/IR.kt` | Add `HasCheck(val dst: Int, val obj: Int, val fieldName: String)` data class |
 | `src/main/kotlin/org/quill/lang/OpCode.kt` | Add `HAS(0x29)` opcode |
 | `src/main/kotlin/org/quill/ast/AstLowerer.kt` | Add `is Expr.HasExpr` case to `lowerExpr` |
 | `src/main/kotlin/org/quill/ast/IrCompiler.kt` | Add `is IrInstr.HasCheck` case in `compile()` `when` block |
@@ -98,7 +98,7 @@ In `src/main/kotlin/org/quill/lang/IR.kt`, add a new data class inside `IrInstr`
 
 ```kotlin
     data class IsType(val dst: Int, val src: Int, val typeName: String) : IrInstr()
-    data class HasCheck(val dst: Int, val obj: Int, val field: Int) : IrInstr()  // new
+    data class HasCheck(val dst: Int, val obj: Int, val fieldName: String) : IrInstr()  // new — fieldName is a compile-time string constant
 ```
 
 - [ ] **Step 3: Add `HAS` opcode**
@@ -240,8 +240,12 @@ In `src/main/kotlin/org/quill/ast/AstLowerer.kt`, in the `lowerExpr` function (a
         }
         is Expr.HasExpr -> {
             val objReg = lowerExpr(expr.target, freshReg())
-            val fieldReg = lowerExpr(expr.field, freshReg())
-            emit(IrInstr.HasCheck(dst, objReg, fieldReg))
+            val fieldExpr = expr.field
+            // field must be a string literal (compile-time known)
+            val fieldName = (fieldExpr as? Expr.LiteralExpr)
+                ?.literal as? Value.String
+                ?: error("has: field name must be a string literal")
+            emit(IrInstr.HasCheck(dst, objReg, fieldName.value))
             dst
         }
     }
@@ -274,97 +278,23 @@ In `src/main/kotlin/org/quill/ast/IrCompiler.kt`, in the `when (instr)` block (a
 
 ```kotlin
                 is IrInstr.IsType -> chunk.write(OpCode.IS_TYPE, dst = instr.dst, src1 = instr.src, imm = chunk.addString(instr.typeName))
-                is IrInstr.HasCheck -> {   // new
-                    val fieldIdx = chunk.addString(instr.field.toString())  // field name as string
-                    chunk.write(OpCode.HAS, dst = instr.dst, src1 = instr.obj, imm = fieldIdx)
-                }
+                is IrInstr.HasCheck -> chunk.write(OpCode.HAS, dst = instr.dst, src1 = instr.obj, imm = chunk.addString(instr.fieldName))  // new
 ```
 
-**Important:** The `field` register holds a string `Value`. We need to store the field name in the constant table and pass its index as `imm`. But since `field` is a register (runtime value), not a compile-time constant, we cannot use `imm` directly — the field name string is in a register at runtime.
+Note: `instr.fieldName` is a `String` (compile-time constant). `chunk.addString()` stores it in the constant table and returns the index, which is passed as `imm` to the `HAS` opcode.
 
-Wait — this is a problem. The `HasCheck` IR instruction has `field: Int` (a register number), but the `HAS` opcode uses `imm` for the field name index. We need to think about this differently.
-
-The `HasCheck` takes a **register** containing the field name string at runtime. The opcode needs the string index — but we don't know it at compile time (it's a runtime register). We need a different approach.
-
-**Revised approach:** Store the field name string in the constant table during lowering, so we have a compile-time index.
-
-In `AstLowerer`, when we lower `HasExpr`, we should store the field expression result in a register, but also add the field name string as a constant. Wait — the field name is not known at compile time if it's a dynamic expression.
-
-But in the common case (string literal), we DO know it at compile time. For dynamic cases, we need the VM to read from the register.
-
-**Final approach:** Keep `HasCheck(field: Int)` where `field` is a register. In IrCompiler, for the `HAS` opcode, we use `imm` as a hint for the string table... but that's wrong since we don't know the string index at compile time for dynamic fields.
-
-Actually, looking at how `GET_FIELD` works: it takes `fieldName` as an `imm` index into `chunk.strings`. But `GET_FIELD` only works with static field names (known at compile time).
-
-For `has` with a dynamic field expression, we need the VM to read the field name from a register, not from `imm`.
-
-**Solution:** We need two opcodes, or we need to handle this differently.
-
-Actually, the cleanest approach is: add a new `IrInstr` variant that stores the field name as a compile-time string constant when it's a literal, and use a register when it's dynamic. But that adds complexity.
-
-**Simpler approach for MVP:** The `HasCheck` IR instruction holds `field: Int` (a register). The `HAS` opcode uses `imm` to reference a compile-time string constant for the common case (static field name). But when the field is dynamic (register), we need a different opcode variant.
-
-Let's keep it simple: make `HasCheck` store the field name as a compile-time string constant, same as `GET_FIELD`. For dynamic field names, the user can use `m.get(dynamicVar) != null` instead — which already works.
-
-Update `HasCheck` to use `fieldName: String` (compile-time constant), not `field: Int`:
-
-```kotlin
-data class HasCheck(val dst: Int, val obj: Int, val fieldName: String) : IrInstr()
-```
-
-Then IrCompiler can use `chunk.addString(instr.fieldName)` as the `imm`.
-
-**For dynamic field names** (expression, not string literal): during parsing, if the field expression is not a literal string, emit an error for now. This is consistent with how `GET_FIELD` works — it only accepts static field names.
-
-**Revised Task 4 and 5:**
-
-- [ ] **Step 1 (Revised): Update `HasCheck` IR to use `fieldName: String`**
-
-In `src/main/kotlin/org/quill/lang/IR.kt`, change the `HasCheck` definition:
-
-```kotlin
-data class HasCheck(val dst: Int, val obj: Int, val fieldName: String) : IrInstr()
-```
-
-- [ ] **Step 2 (Revised): Update `AstLowerer` to emit `HasCheck` with string field name**
-
-In `src/main/kotlin/org/quill/ast/AstLowerer.kt`, update the `HasExpr` case:
-
-```kotlin
-is Expr.HasExpr -> {
-    val objReg = lowerExpr(expr.target, freshReg())
-    val fieldExpr = expr.field
-    // field must be a string literal (compile-time known)
-    val fieldName = (fieldExpr as? Expr.LiteralExpr)
-        ?.literal as? Value.String
-        ?: error("has: field name must be a string literal")
-    emit(IrInstr.HasCheck(dst, objReg, fieldName.value))
-    dst
-}
-```
-
-Note: The `dst` register is already the destination for the `has` result (boolean). We evaluate `target` into a fresh register `objReg`. The field name is a compile-time string constant stored in `HasCheck.fieldName`, not a register — IrCompiler encodes it into `imm` via `chunk.addString()`.
-
-- [ ] **Step 3: Add `is IrInstr.HasCheck` case in IrCompiler**
-
-In `src/main/kotlin/org/quill/ast/IrCompiler.kt`, in the `when (instr)` block, add:
-
-```kotlin
-                is IrInstr.HasCheck -> chunk.write(OpCode.HAS, dst = instr.dst, src1 = instr.obj, imm = chunk.addString(instr.fieldName))
-```
-
-- [ ] **Step 4: Verify compilation**
+- [ ] **Step 2: Verify compilation**
 
 ```
 ./gradlew compileKotlin
 ```
 Expected: BUILD SUCCESSFUL
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/main/kotlin/org/quill/lang/IR.kt src/main/kotlin/org/quill/ast/AstLowerer.kt src/main/kotlin/org/quill/ast/IrCompiler.kt
-git commit -m "feat: lower and compile HasCheck IR to HAS opcode"
+git add src/main/kotlin/org/quill/ast/IrCompiler.kt
+git commit -m "feat: compile HasCheck IR instruction to HAS opcode"
 ```
 
 ---
