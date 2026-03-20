@@ -21,4 +21,9 @@ repositories {
 dependencies {
     // Quills's standard library
     implementation(project(":"))
+
+    // Tar.gz extraction
+    implementation("org.apache.commons:commons-compress:1.26.0")
+
+    testImplementation(kotlin("test"))
 }
