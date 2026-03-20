@@ -560,6 +560,173 @@ class VMTest {
         assertEquals(listOf("""say "hi""""), output)
     }
 
+    // String method tests
+
+    @Test
+    fun testStringSplit() {
+        val output = compileAndRun("""print("a,b,c".split(","))""")
+        // split(",") returns Array, which toString() is [a, b, c]
+        assertEquals(listOf("[a, b, c]"), output)
+    }
+
+    @Test
+    fun testStringSplitEmptyResult() {
+        val output = compileAndRun("""print("".split(","))""")
+        assertEquals(listOf("[]"), output)
+    }
+
+    @Test
+    fun testStringSplitMultiChar() {
+        val output = compileAndRun("""print("a--b--c".split("--"))""")
+        assertEquals(listOf("[a, b, c]"), output)
+    }
+
+    @Test
+    fun testStringTrim() {
+        val output = compileAndRun("""print("  hello  ".trim())""")
+        assertEquals(listOf("hello"), output)
+    }
+
+    @Test
+    fun testStringTrimNeither() {
+        val output = compileAndRun("""print("hello".trim())""")
+        assertEquals(listOf("hello"), output)
+    }
+
+    @Test
+    fun testStringContainsTrue() {
+        val output = compileAndRun("""print("hello world".contains("world"))""")
+        assertEquals(listOf("Boolean(value=true)"), output)
+    }
+
+    @Test
+    fun testStringContainsFalse() {
+        val output = compileAndRun("""print("hello world".contains("foo"))""")
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testStringReplace() {
+        val output = compileAndRun("""print("hello".replace("l", "x"))""")
+        // Note: replace in Quill replaces all occurrences (not first-only)
+        assertEquals(listOf("hexxo"), output)
+    }
+
+    @Test
+    fun testStringReplaceAll() {
+        val output = compileAndRun("""print("hello".replaceAll("l", "x"))""")
+        assertEquals(listOf("hexxo"), output)
+    }
+
+    @Test
+    fun testStringToUpperCase() {
+        val output = compileAndRun("""print("hello".toUpperCase())""")
+        assertEquals(listOf("HELLO"), output)
+    }
+
+    @Test
+    fun testStringToLowerCase() {
+        val output = compileAndRun("""print("HELLO".toLowerCase())""")
+        assertEquals(listOf("hello"), output)
+    }
+
+    @Test
+    fun testStringStartsWithTrue() {
+        val output = compileAndRun("""print("hello".startsWith("hel"))""")
+        assertEquals(listOf("Boolean(value=true)"), output)
+    }
+
+    @Test
+    fun testStringStartsWithFalse() {
+        val output = compileAndRun("""print("hello".startsWith("world"))""")
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testStringEndsWithTrue() {
+        val output = compileAndRun("""print("hello".endsWith("llo"))""")
+        assertEquals(listOf("Boolean(value=true)"), output)
+    }
+
+    @Test
+    fun testStringEndsWithFalse() {
+        val output = compileAndRun("""print("hello".endsWith("world"))""")
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testStringIndexOfFound() {
+        val output = compileAndRun("""print("hello".indexOf("l"))""")
+        assertEquals(listOf("2"), output)
+    }
+
+    @Test
+    fun testStringIndexOfNotFound() {
+        val output = compileAndRun("""print("hello".indexOf("z"))""")
+        assertEquals(listOf("-1"), output)
+    }
+
+    @Test
+    fun testStringLength() {
+        val output = compileAndRun("""print("hello".length())""")
+        assertEquals(listOf("5"), output)
+    }
+
+    @Test
+    fun testStringLengthEmpty() {
+        val output = compileAndRun("""print("".length())""")
+        assertEquals(listOf("0"), output)
+    }
+
+    @Test
+    fun testStringIsEmptyTrue() {
+        val output = compileAndRun("""print("".isEmpty())""")
+        assertEquals(listOf("Boolean(value=true)"), output)
+    }
+
+    @Test
+    fun testStringIsEmptyFalse() {
+        val output = compileAndRun("""print("hello".isEmpty())""")
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testStringIsBlankTrue() {
+        val output = compileAndRun("""print("   ".isBlank())""")
+        assertEquals(listOf("Boolean(value=true)"), output)
+    }
+
+    @Test
+    fun testStringIsBlankFalse() {
+        val output = compileAndRun("""print("hello".isBlank())""")
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testStringChars() {
+        val output = compileAndRun("""print("abc".chars())""")
+        assertEquals(listOf("[a, b, c]"), output)
+    }
+
+    @Test
+    fun testStringCharsEmpty() {
+        val output = compileAndRun("""print("".chars())""")
+        assertEquals(listOf("[]"), output)
+    }
+
+    @Test
+    fun testStringGetValidIndex() {
+        val output = compileAndRun("""print("hello".get(1))""")
+        assertEquals(listOf("e"), output)
+    }
+
+    @Test
+    fun testStringGetOutOfBoundsReturnsNull() {
+        // TODO: should throw StringIndexOutOfBoundsError; currently returns null
+        val output = compileAndRun("""print("hello".get(10))""")
+        assertEquals(listOf("null"), output)
+    }
+
     @Ignore("SSA round-trip bug with control flow — test verifies optimizer correctness once fixed")
     @Test
     fun testDeadCodeEliminated() {
