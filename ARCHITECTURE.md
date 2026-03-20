@@ -70,15 +70,20 @@ src/main/kotlin/org/quill/
     SsaOptPass.kt                Base interface for SSA optimization passes
     passes/
       SsaConstantPropagationPass.kt
+      SsaGlobalValueNumberingPass.kt  GVN within a single block
+      SsaCrossBlockGvnPass.kt    GVN across blocks using domination
       SsaDeadCodeEliminationPass.kt
   opt/
     OptPass.kt                   Base interface for IR optimization passes
     OptimizationPipeline.kt      Pass orchestration (fixed-point iteration)
     passes/
       ConstantFoldingPass.kt     IR-level constant folding
+      InductionVariablePass.kt   Range iterator -> arithmetic normalization
+      StrengthReductionPass.kt   Algebraic simplification (x*2 -> x+x, etc.)
       DeadCodeEliminationPass.kt Unreachable block + unused def removal
       CopyPropagationPass.kt     Redundant MOVE elimination
       LoopInvariantCodeMotionPass.kt  Hoist invariant code out of loops
+      BranchOptimizationPass.kt  Optimize conditional branches
   domain/
     Script.kt                    Empty placeholder
 
@@ -147,7 +152,7 @@ Full SSA construction (Cytron et al.) is implemented with phi placement, variabl
 - `is` type checking operator
 - Range expressions (`a..b`)
 - Built-in `print()` function
-- Optimization pipeline (ConstantFolding, SsaConstantPropagation, SsaDeadCodeElimination, DeadCodeElimination)
+- Optimization pipeline (ConstantFolding, InductionVariable, Pre-SSA → SSA → GVN, constant propagation, dead code elimination, copy propagation, strength reduction, loop invariant code motion, branch optimization)
 
 ### Parsed But Not Lowered / Stub-Only
 
