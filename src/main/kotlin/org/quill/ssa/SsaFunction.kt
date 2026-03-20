@@ -129,6 +129,7 @@ class SsaFunction(
         is SsaInstr.SetField -> "${instr.obj}.${instr.name} = ${instr.src}"
         is SsaInstr.NewInstance -> "${instr.definedValue} = NewInstance ${instr.classReg}(${instr.args.joinToString(", ")})"
         is SsaInstr.IsType -> "${instr.definedValue} = ${instr.src} is ${instr.typeName}"
+        is SsaInstr.HasCheck -> "${instr.definedValue} = ${instr.obj} has \"${instr.fieldName}\""
         is SsaInstr.LoadClass -> "${instr.definedValue} = LoadClass ${instr.name}"
         is SsaInstr.Break -> "Break"
         is SsaInstr.Next -> "Next"

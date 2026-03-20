@@ -576,4 +576,66 @@ class VMTest {
         )
         assertEquals(listOf("5"), output)
     }
+
+    // has operator tests
+    @Test
+    fun testHasBasic() {
+        val output = compileAndRun(
+            """
+            class Foo { init() { this.x = 1 } }
+            let f = Foo()
+            print(f has "x")
+            print(f has "y")
+            """.trimIndent()
+        )
+        assertEquals(listOf("Boolean(value=true)", "Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testHasMap() {
+        val output = compileAndRun(
+            """
+            let m = { "key": 42 }
+            print(m has "key")
+            print(m has "other")
+            """.trimIndent()
+        )
+        assertEquals(listOf("Boolean(value=true)", "Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testHasDynamicField() {
+        // Dynamic field name via variable — only works if field is a string literal
+        val output = compileAndRun(
+            """
+            class Foo { init() { this.name = "Bob" } }
+            let f = Foo()
+            let field = "name"
+            print(f has "name")
+            """.trimIndent()
+        )
+        assertEquals(listOf("Boolean(value=true)"), output)
+    }
+
+    @Test
+    fun testHasArrayReturnsFalse() {
+        val output = compileAndRun(
+            """
+            let arr = [1, 2, 3]
+            print(arr has "length")
+            """.trimIndent()
+        )
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
+
+    @Test
+    fun testHasNonObjectReturnsFalse() {
+        val output = compileAndRun(
+            """
+            let x = 42
+            print(x has "foo")
+            """.trimIndent()
+        )
+        assertEquals(listOf("Boolean(value=false)"), output)
+    }
 }

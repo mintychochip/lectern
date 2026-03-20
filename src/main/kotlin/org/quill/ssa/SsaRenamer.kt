@@ -212,6 +212,12 @@ class SsaRenamer(
                 pushCounts[instr.definedValue.baseReg] = (pushCounts[instr.definedValue.baseReg] ?: 0) + 1
                 SsaInstr.IsType(SsaValue(instr.definedValue.baseReg, newVersion), src, instr.typeName)
             }
+            is SsaInstr.HasCheck -> {
+                val obj = getCurrentValue(instr.obj.baseReg)
+                val newVersion = newVersion(instr.definedValue.baseReg)
+                pushCounts[instr.definedValue.baseReg] = (pushCounts[instr.definedValue.baseReg] ?: 0) + 1
+                SsaInstr.HasCheck(SsaValue(instr.definedValue.baseReg, newVersion), obj, instr.fieldName)
+            }
             is SsaInstr.LoadClass -> {
                 val newVersion = newVersion(instr.definedValue.baseReg)
                 pushCounts[instr.definedValue.baseReg] = (pushCounts[instr.definedValue.baseReg] ?: 0) + 1

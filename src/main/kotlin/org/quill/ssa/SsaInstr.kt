@@ -139,6 +139,14 @@ sealed class SsaInstr {
         override val usedValues: List<SsaValue> = listOf(src)
     }
 
+    data class HasCheck(
+        override val definedValue: SsaValue,
+        val obj: SsaValue,
+        val fieldName: String
+    ) : SsaInstr() {
+        override val usedValues: List<SsaValue> = listOf(obj)
+    }
+
     data class LoadClass(
         override val definedValue: SsaValue,
         val name: String,

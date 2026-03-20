@@ -311,6 +311,11 @@ class SsaDeconstructor(private val ssaFunc: SsaFunction) {
             val src = mapReg(instr.src)
             IrInstr.IsType(dst, src, instr.typeName)
         }
+        is SsaInstr.HasCheck -> {
+            val dst = mapReg(instr.definedValue)
+            val obj = mapReg(instr.obj)
+            IrInstr.HasCheck(dst, obj, instr.fieldName)
+        }
         is SsaInstr.LoadClass -> {
             val dst = mapReg(instr.definedValue)
             IrInstr.LoadClass(dst, instr.name, instr.superClass, instr.methods)

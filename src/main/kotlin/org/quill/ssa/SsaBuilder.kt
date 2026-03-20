@@ -227,7 +227,9 @@ class SsaBuilder(
         is IrInstr.IsType -> SsaInstr.IsType(
             SsaValue(instr.dst, 0), SsaValue(instr.src, 0), instr.typeName
         )
-        is IrInstr.HasCheck -> error("HasCheck not yet implemented")
+        is IrInstr.HasCheck -> SsaInstr.HasCheck(
+            SsaValue(instr.dst, 0), SsaValue(instr.obj, 0), instr.fieldName
+        )
         is IrInstr.LoadClass -> SsaInstr.LoadClass(
             SsaValue(instr.dst, 0), instr.name, instr.superClass, instr.methods
         )
