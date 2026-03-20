@@ -487,7 +487,16 @@ class AstLowerer {
             emit(IrInstr.IsType(dst, srcReg, expr.type.lexeme))
             dst
         }
-        is Expr.HasExpr -> error("HasExpr not yet implemented")
+        is Expr.HasExpr -> {
+            val objReg = lowerExpr(expr.target, freshReg())
+            val fieldExpr = expr.field
+            // field must be a string literal (compile-time known)
+            val fieldName = (fieldExpr as? Expr.LiteralExpr)
+                ?.literal as? Value.String
+                ?: error("has: field name must be a string literal")
+            emit(IrInstr.HasCheck(dst, objReg, fieldName.value))
+            dst
+        }
         is Expr.LambdaExpr -> {
             val lambdaName = "__lambda_${lambdaCounter++}"
             val lowerer = AstLowerer()
