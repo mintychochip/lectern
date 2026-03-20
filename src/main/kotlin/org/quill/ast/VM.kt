@@ -261,7 +261,31 @@ class VM {
                     }
                     frame.regs[dst] = if (result) Value.Boolean.TRUE else Value.Boolean.FALSE
                 }
-                OpCode.HAS -> error("HAS not yet implemented")
+                OpCode.HAS -> {
+                    val obj = frame.regs[src1] ?: error("Cannot has on null")
+                    val fieldName = frame.chunk.strings[imm]
+                    val result = when (obj) {
+                        is Value.Instance -> {
+                            if (obj.clazz == Builtins.MapClass) {
+                                // Map: check __entries InternalMap
+                                val entriesVal = obj.fields["__entries"]
+                                if (entriesVal is Value.InternalMap) {
+                                    Value.Boolean(entriesVal.entries.containsKey(Value.String(fieldName)))
+                                } else {
+                                    Value.Boolean(false)
+                                }
+                            } else if (obj.clazz == Builtins.ArrayClass) {
+                                // Array: no named fields
+                                Value.Boolean(false)
+                            } else {
+                                // Regular instance: check own fields only
+                                Value.Boolean(obj.fields.containsKey(fieldName))
+                            }
+                        }
+                        else -> Value.Boolean(false)
+                    }
+                    frame.regs[dst] = result
+                }
                 OpCode.BUILD_CLASS -> {
                     val classInfo = frame.chunk.classes[imm]
                     // Resolve superclass from globals if specified
@@ -472,6 +496,31 @@ class VM {
                 }
                 OpCode.SPILL   -> frame.spills[imm] = frame.regs[src1]
                 OpCode.UNSPILL -> frame.regs[dst] = frame.spills[imm]!!
+                OpCode.HAS -> {
+                    val obj = frame.regs[src1] ?: error("Cannot has on null")
+                    val fieldName = frame.chunk.strings[imm]
+                    val result = when (obj) {
+                        is Value.Instance -> {
+                            if (obj.clazz == Builtins.MapClass) {
+                                // Map: check __entries InternalMap
+                                val entriesVal = obj.fields["__entries"]
+                                if (entriesVal is Value.InternalMap) {
+                                    Value.Boolean(entriesVal.entries.containsKey(Value.String(fieldName)))
+                                } else {
+                                    Value.Boolean(false)
+                                }
+                            } else if (obj.clazz == Builtins.ArrayClass) {
+                                // Array: no named fields
+                                Value.Boolean(false)
+                            } else {
+                                // Regular instance: check own fields only
+                                Value.Boolean(obj.fields.containsKey(fieldName))
+                            }
+                        }
+                        else -> Value.Boolean(false)
+                    }
+                    frame.regs[dst] = result
+                }
                 else -> error("Unsupported opcode in default value: $opcode")
             }
         }
