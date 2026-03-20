@@ -38,6 +38,9 @@ enum class TokenType {
     STAR,
     SLASH,
     PERCENT,
+    AMPERSAND,    // &
+    CIRCUMFLEX,  // ^
+    PIPE,         // |
     INCREMENT,
     DECREMENT,
     POW,

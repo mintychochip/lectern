@@ -4,3 +4,4 @@ plugins {
 rootProject.name = "quill"
 include("quill-intellij")
 include("quill-vscode")
+include("lt")

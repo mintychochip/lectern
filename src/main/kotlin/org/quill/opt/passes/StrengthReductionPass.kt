@@ -106,16 +106,17 @@ class StrengthReductionPass : OptPass {
                     regConstants.remove(instr.dst)
                 }
             }
-            is IrInstr.LoadGlobal, is IrInstr.LoadFunc, is IrInstr.LoadClass,
-            is IrInstr.Call, is IrInstr.NewArray, is IrInstr.NewInstance,
-            is IrInstr.GetIndex, is IrInstr.GetField -> {
-                regConstants.remove(instr.dst)
-            }
+            is IrInstr.LoadGlobal -> regConstants.remove(instr.dst)
+            is IrInstr.LoadFunc -> regConstants.remove(instr.dst)
+            is IrInstr.LoadClass -> regConstants.remove(instr.dst)
+            is IrInstr.Call -> regConstants.remove(instr.dst)
+            is IrInstr.NewArray -> regConstants.remove(instr.dst)
+            is IrInstr.NewInstance -> regConstants.remove(instr.dst)
+            is IrInstr.GetIndex -> regConstants.remove(instr.dst)
+            is IrInstr.GetField -> regConstants.remove(instr.dst)
             else -> {
                 // For instructions we don't track, remove any constant status
-                if (instr is IrInstr && instr.dst != null) {
-                    regConstants.remove(instr.dst)
-                }
+                // No-op
             }
         }
     }
