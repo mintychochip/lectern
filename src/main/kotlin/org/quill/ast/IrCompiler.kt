@@ -16,6 +16,7 @@ import org.quill.ssa.SsaDeconstructor
 import org.quill.ssa.passes.SsaConstantPropagationPass
 import org.quill.ssa.passes.SsaDeadCodeEliminationPass
 import org.quill.ssa.passes.SsaGlobalValueNumberingPass
+import org.quill.ssa.passes.SsaCrossBlockGvnPass
 
 class IrCompiler {
     companion object {
@@ -28,6 +29,7 @@ class IrCompiler {
             ssaPasses = listOf(
                 SsaConstantPropagationPass(),
                 SsaGlobalValueNumberingPass(),
+                SsaCrossBlockGvnPass(),
                 SsaDeadCodeEliminationPass()
             ),
             preSsaPasses = listOf(
@@ -103,7 +105,7 @@ class IrCompiler {
                     chunk.write(OpCode.CALL, dst = instr.dst, src1 = instr.func, imm = instr.args.size)
                 }
                 is IrInstr.LoadFunc -> {
-                    // SSA round-trip on function body (arity must be passed to preserve parameter registers)
+                    // SSA round-trip on function body
                     val funcSsa = SsaBuilder.build(instr.instrs, instr.constants, instr.arity)
                     val funcDeconstructed = SsaDeconstructor.deconstruct(funcSsa)
 
