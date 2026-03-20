@@ -27,6 +27,7 @@ sealed class IrInstr {
     data class SetField(val obj: Int, val name: String, val src: Int) : IrInstr()
     data class NewInstance(val dst: Int, val classReg: Int, val args: List<Int>) : IrInstr()
     data class IsType(val dst: Int, val src: Int, val typeName: String) : IrInstr()
+    data class HasCheck(val dst: Int, val obj: Int, val fieldName: String) : IrInstr()  // new — fieldName is a compile-time string constant
     data class LoadClass(
         val dst: Int,
         val name: String,

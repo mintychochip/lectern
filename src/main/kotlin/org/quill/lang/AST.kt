@@ -73,6 +73,7 @@ sealed class Expr {
     data class IndexExpr(val obj: Expr, val index: Expr) : Expr()
 
     data class IsExpr(val expr: Expr, val type: Token) : Expr()
+    data class HasExpr(val target: Expr, val field: Expr) : Expr()  // new
 }
 
 data class Param(val name: Token, val type: Token?, val defaultValue: Expr? = null)
