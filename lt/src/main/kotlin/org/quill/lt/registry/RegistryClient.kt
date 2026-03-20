@@ -70,7 +70,8 @@ class RegistryClient(
         return candidate?.let { pkg.versions[it] }
     }
 
-    private fun parseIndexJson(json: String): Map<String, RegistryPackage> {
+    @PublishedApi
+    internal fun parseIndexJson(json: String): Map<String, RegistryPackage> {
         val result = mutableMapOf<String, RegistryPackage>()
         parseJsonObject(json)?.forEach { (pkgName, value) ->
             val versions = mutableMapOf<String, RegistryPackageVersion>()
