@@ -165,7 +165,7 @@ class IrCompiler {
                     chunk.write(OpCode.NEW_INSTANCE, dst = instr.dst, src1 = instr.classReg, imm = instr.args.size)
                 }
                 is IrInstr.IsType -> chunk.write(OpCode.IS_TYPE, dst = instr.dst, src1 = instr.src, imm = chunk.addString(instr.typeName))
-                is IrInstr.HasCheck -> error("HasCheck not yet implemented")
+                is IrInstr.HasCheck -> chunk.write(OpCode.HAS, dst = instr.dst, src1 = instr.obj, imm = chunk.addString(instr.fieldName))
                 is IrInstr.LoadClass -> {
                     // Compile each method as a nested function chunk
                     val methodFuncIndices = mutableMapOf<String, Int>()
