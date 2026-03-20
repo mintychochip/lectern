@@ -341,7 +341,13 @@ class Parser(private val tokens: List<Token>) {
                     Expr.CallExpr(expr, paren, args)
                 }
                 match(TokenType.DOT) -> {
-                    val name = consume(TokenType.IDENTIFIER, "Expected field name after '.'")
+                    // After a dot, allow IDENTIFIER or keywords that can be used as method names
+                    val name = when {
+                        match(TokenType.IDENTIFIER) -> previous()
+                        match(TokenType.KW_HAS) -> previous()  // has can be used as method name
+                        match(TokenType.KW_IS) -> previous()    // is can be used as method name
+                        else -> throw error(peek(), "Expected field name after '.'")
+                    }
                     Expr.GetExpr(expr, name)
                 }
                 match(TokenType.L_SQUARE) -> {

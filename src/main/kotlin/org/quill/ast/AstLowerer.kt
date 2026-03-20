@@ -78,8 +78,14 @@ class AstLowerer {
         is Stmt.ImportStmt -> {
             val dst = freshReg()
             locals[stmt.namespace.lexeme] = dst
-            val markerIdx = addConstant(Value.String("__import__${stmt.namespace.lexeme}"))
-            emit(IrInstr.LoadImm(dst, markerIdx))
+            // For stdlib imports (math, random), load the actual instance from globals
+            if (stmt.namespace.lexeme == "math" || stmt.namespace.lexeme == "random") {
+                emit(IrInstr.LoadGlobal(dst, stmt.namespace.lexeme))
+            } else {
+                // For other imports, keep the marker string behavior
+                val markerIdx = addConstant(Value.String("__import__${stmt.namespace.lexeme}"))
+                emit(IrInstr.LoadImm(dst, markerIdx))
+            }
             emit(IrInstr.StoreGlobal(stmt.namespace.lexeme, dst))
         }
         is Stmt.ImportFromStmt -> {

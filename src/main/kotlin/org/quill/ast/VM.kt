@@ -20,6 +20,10 @@ fun valueToString(v: Value): String = when (v) {
 }
 
 class VM {
+    // Pre-created instances for stdlib - must be initialized before globals
+    private val mathInstance = Builtins.newMath()
+    private val randomInstance = Builtins.newRandom()
+
     val globals = mutableMapOf<String, Value>(
         "Array" to Value.Class(Builtins.ArrayClass),
         "Map" to Value.Class(Builtins.MapClass),
@@ -31,6 +35,9 @@ class VM {
             println(args.joinToString(" ") { valueToString(it) })
             Value.Null
         },
+        // Stdlib instances for import
+        "math" to mathInstance,
+        "random" to randomInstance,
     )
 
     data class CallFrame(

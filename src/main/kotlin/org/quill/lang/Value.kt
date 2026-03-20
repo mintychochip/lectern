@@ -396,4 +396,62 @@ object Builtins {
             TupleClass,
             mutableMapOf("__tuple" to Value.InternalTuple(items))
         )
+
+    private fun toDouble(v: Value): Double = when (v) {
+        is Value.Int -> v.value.toDouble()
+        is Value.Float -> v.value.toDouble()
+        is Value.Double -> v.value
+        else -> error("Expected number, got $v")
+    }
+
+    val MathClass = ClassDescriptor(
+        name = "Math",
+        superClass = null,
+        methods = mapOf(
+            "abs" to Value.NativeFunction { args ->
+                val v = toDouble(args[1])  // args[0] is self
+                Value.Double(kotlin.math.abs(v))
+            },
+            "min" to Value.NativeFunction { args ->
+                val a = toDouble(args[1])  // args[0] is self
+                val b = toDouble(args[2])
+                Value.Double(kotlin.math.min(a, b))
+            },
+            "max" to Value.NativeFunction { args ->
+                val a = toDouble(args[1])  // args[0] is self
+                val b = toDouble(args[2])
+                Value.Double(kotlin.math.max(a, b))
+            },
+            "pow" to Value.NativeFunction { args ->
+                val base = toDouble(args[1])  // args[0] is self
+                val exp = toDouble(args[2])
+                Value.Double(Math.pow(base, exp))
+            },
+            "floor" to Value.NativeFunction { args ->
+                val v = toDouble(args[1])  // args[0] is self
+                Value.Double(kotlin.math.floor(v))
+            },
+            "ceil" to Value.NativeFunction { args ->
+                val v = toDouble(args[1])  // args[0] is self
+                Value.Double(kotlin.math.ceil(v))
+            },
+            "round" to Value.NativeFunction { args ->
+                val v = toDouble(args[1])  // args[0] is self
+                Value.Double(kotlin.math.round(v))
+            }
+        )
+    )
+
+    val RandomClass = ClassDescriptor(
+        name = "Random",
+        superClass = null,
+        methods = mapOf(
+            "random" to Value.NativeFunction { _ ->
+                Value.Double(Math.random())
+            }
+        )
+    )
+
+    fun newMath(): Value.Instance = Value.Instance(MathClass, mutableMapOf())
+    fun newRandom(): Value.Instance = Value.Instance(RandomClass, mutableMapOf())
 }
