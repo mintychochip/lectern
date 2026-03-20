@@ -401,4 +401,10 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 Run: `./gradlew test 2>&1 | tail -20`
 Expected: BUILD SUCCESSFUL with no new failures
 
-- [ ] **Step 2: Commit any test fixes if needed**
+- [ ] **Step 2: Handle any test failures**
+
+Run: `./gradlew test 2>&1 | grep -E "(FAILED|testString|BUILD)" | tail -30`
+
+If any `testString*` test fails: investigate and fix the implementation or test assertions.
+If failures are in unrelated tests (pre-existing, e.g. `testDeadCodeEliminated` which is `@Ignore`'d): they are expected, proceed.
+If there are new unexpected failures: diagnose before committing.
