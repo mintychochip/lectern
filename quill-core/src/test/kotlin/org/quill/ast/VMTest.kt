@@ -37,10 +37,11 @@ private fun compileAndRun(source: String): List<String> {
 class VMTest {
 
     @Test
-    fun testPrintIsBuiltin() {
-        // VM should have print registered by default — no manual setup
-        val vm = VM()
-        assertTrue(vm.globals.containsKey("print"), "VM should have built-in print")
+    fun testPrintIsProvidedByContext() {
+        // VM no longer has print as a builtin — print/log come from QuillContext
+        // compileAndRun provides FakeQuillContext-backed print for tests
+        val output = compileAndRun("print(42)")
+        assertEquals(listOf("42"), output)
     }
 
     @Test

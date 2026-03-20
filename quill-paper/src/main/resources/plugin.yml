@@ -1,0 +1,4 @@
+name: Quill
+version: 1.0-SNAPSHOT
+main: org.quill.paper.QuillPlugin
+api-version: '1.21'
